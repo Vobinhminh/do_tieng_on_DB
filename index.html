@@ -339,7 +339,7 @@
     let biquadFilter = null;
     let mediaStream = null;
     let isMeasuring = false;
-    let isPausedForReview = false; // Trạng thái tạm dừng để nhìn số liệu
+    let isPausedForReview = false; 
     let animationId = null;
     let noiseFloorOffset = 0;
 
@@ -457,7 +457,7 @@
                 measureBtn.innerText = "Dừng đo";
                 measureBtn.className = "stop-btn";
                 micSelect.disabled = true; 
-                statusText.innerText = "Đang đo... (Đủ 5 mẫu sẽ tạm dừng 6 giây để ghi chép)";
+                statusText.innerText = "Đang đo... (Đủ 5 mẫu sẽ hiển thị và tạm dừng 6 giây để ghi chép)";
 
                 if (logCount >= 5) {
                     logCount = 0;
@@ -491,18 +491,18 @@
         windowSumDb = 0;
         windowCountFrames = 0;
 
-        // Khi đã ghi đủ 5 mẫu: Tạm dừng vòng lặp ghi nhận trong 6 giây để người dùng kịp nhìn/ghi chép
+        // Khi đã ghi đủ mẫu thứ 5: Hiển thị hoàn tất và tạm dừng 6 giây để người dùng ghi chép
         if (logCount >= 5) {
             isPausedForReview = true;
-            statusText.innerText = "Đã đủ 5 mẫu! Đang tạm dừng 6 giây để ghi chép giá trị...";
+            statusText.innerText = "Đã đủ 5 mẫu! Đang hiển thị để ghi chép (tạm dừng 6 giây)...";
             
             setTimeout(() => {
                 if (!isMeasuring) return;
-                historyList.innerHTML = ''; // Xóa bảng cũ
+                historyList.innerHTML = ''; // Xóa bảng sau khi hết 6 giây
                 logCount = 0;               // Reset bộ đếm về 0
-                isPausedForReview = false;  // Tiếp tục đo đợt mới
+                isPausedForReview = false;  // Cho phép tiếp tục vòng lặp đo đợt mới
                 statusText.innerText = "Đang đo đợt tiếp theo...";
-            }, 6000); // 6 giây nghỉ
+            }, 6000); // 6 giây nghỉ nhìn số liệu
         } else {
             statusText.innerText = `Đang đo... (Mẫu ${logCount}/5)`;
         }
@@ -659,7 +659,6 @@
                 dbHistory.shift(); 
             }
 
-            // Chỉ cộng dồn giá trị vào bảng khi không ở trạng thái tạm dừng nghỉ
             if (!isPausedForReview) {
                 windowSumDb += db;
                 windowCountFrames++;
