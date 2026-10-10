@@ -109,7 +109,7 @@
             margin-top: -4px;
         }
 
-        /* ================= KHU VỰC HIỂN TRUNG TÂM ================= */
+        /* ================= KHU VỰC HIỂN THỊ TRUNG TÂM ================= */
         .main-display {
             flex: 1; 
             display: flex;
@@ -220,7 +220,7 @@
             font-weight: 900;
             color: inherit; 
             line-height: 1;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Times New Roman', Times, serif; 
             font-variant-numeric: tabular-nums; 
         }
 
@@ -339,6 +339,7 @@
     let biquadFilter = null;
     let mediaStream = null;
     let isMeasuring = false;
+    let isPausedForReview = false; // Trạng thái tạm dừng để nhìn số liệu
     let animationId = null;
     let noiseFloorOffset = 0;
 
@@ -452,10 +453,11 @@
                 gainNode.connect(analyser);
 
                 isMeasuring = true;
+                isPausedForReview = false;
                 measureBtn.innerText = "Dừng đo";
                 measureBtn.className = "stop-btn";
                 micSelect.disabled = true; 
-                statusText.innerText = "Đang đo liên tục... (Bảng tự động làm mới sau mỗi 5 mẫu)";
+                statusText.innerText = "Đang đo... (Đủ 5 mẫu sẽ tạm dừng 6 giây để ghi chép)";
 
                 if (logCount >= 5) {
                     logCount = 0;
@@ -475,13 +477,7 @@
     });
 
     function logDataTick() {
-        if (!isMeasuring) return;
-
-        // Nếu đã ghi đủ 5 lần ở đợt trước, bây giờ tự động làm mới bảng để ghi đợt mới
-        if (logCount >= 5) {
-            logCount = 0;
-            historyList.innerHTML = '';
-        }
+        if (!isMeasuring || isPausedForReview) return;
 
         let avgDb = windowCountFrames > 0 ? (windowSumDb / windowCountFrames) : 0;
         logCount++;
@@ -495,11 +491,20 @@
         windowSumDb = 0;
         windowCountFrames = 0;
 
-        // Cập nhật trạng thái
-        if (logCount === 5) {
-            statusText.innerText = "Đã ghi đủ 5 mẫu. Bảng sẽ tự động làm mới ở lần ghi tiếp theo.";
+        // Khi đã ghi đủ 5 mẫu: Tạm dừng vòng lặp ghi nhận trong 6 giây để người dùng kịp nhìn/ghi chép
+        if (logCount >= 5) {
+            isPausedForReview = true;
+            statusText.innerText = "Đã đủ 5 mẫu! Đang tạm dừng 6 giây để ghi chép giá trị...";
+            
+            setTimeout(() => {
+                if (!isMeasuring) return;
+                historyList.innerHTML = ''; // Xóa bảng cũ
+                logCount = 0;               // Reset bộ đếm về 0
+                isPausedForReview = false;  // Tiếp tục đo đợt mới
+                statusText.innerText = "Đang đo đợt tiếp theo...";
+            }, 6000); // 6 giây nghỉ
         } else {
-            statusText.innerText = `Đang đo liên tục... (Đang ghi nhận mẫu ${logCount}/5)`;
+            statusText.innerText = `Đang đo... (Mẫu ${logCount}/5)`;
         }
     }
 
@@ -518,6 +523,7 @@
         if (autoLogInterval) clearInterval(autoLogInterval); 
         
         isMeasuring = false;
+        isPausedForReview = false;
         measureBtn.innerText = "Bắt đầu đo";
         measureBtn.className = "start-btn";
         micSelect.disabled = false;
@@ -653,8 +659,11 @@
                 dbHistory.shift(); 
             }
 
-            windowSumDb += db;
-            windowCountFrames++;
+            // Chỉ cộng dồn giá trị vào bảng khi không ở trạng thái tạm dừng nghỉ
+            if (!isPausedForReview) {
+                windowSumDb += db;
+                windowCountFrames++;
+            }
 
             drawGraphGrid();
 
