@@ -14,6 +14,7 @@
             --border-color: rgba(255, 255, 255, 0.2);
             --safe-color: #22c55e;   /* Xanh lá - An toàn */
             --danger-color: #ef4444; /* Đỏ - Quá ngưỡng */
+            --reset-color: #f59e0b;  /* Vàng cam - Nút Reset */
         }
 
         * {
@@ -33,7 +34,7 @@
             flex-direction: column;
         }
 
-        /* TOOLBAR PHÍA TRÊN CÙNG (GỌN GÀNG) */
+        /* TOOLBAR PHÍA TRÊN CÙNG */
         .top-toolbar {
             background: var(--panel-bg);
             backdrop-filter: blur(10px);
@@ -93,8 +94,10 @@
 
         button:active { transform: scale(0.95); }
         button:disabled { background-color: #64748b; color: #cbd5e1; cursor: not-allowed; }
-        button.start-btn { background-color: var(--safe-color); color: white; flex: 1; padding: 10px; font-size: 14px;}
-        button.stop-btn { background-color: var(--danger-color); color: white; flex: 1; padding: 10px; font-size: 14px;}
+        
+        button.start-btn { background-color: var(--safe-color); color: white; flex: 2; padding: 10px; font-size: 14px;}
+        button.stop-btn { background-color: var(--danger-color); color: white; flex: 2; padding: 10px; font-size: 14px;}
+        button.reset-btn { background-color: var(--reset-color); color: white; flex: 1; padding: 10px; font-size: 14px;}
 
         #statusText {
             font-size: 12px;
@@ -104,7 +107,7 @@
             margin-top: -4px;
         }
 
-        /* KHU VỰC HIỂN THỊ CHÍNH (FULL MÀN HÌNH) */
+        /* KHU VỰC HIỂN THỊ CHÍNH */
         .main-display {
             flex: 1;
             display: flex;
@@ -114,10 +117,53 @@
             position: relative;
         }
 
+        /* BẢNG LỊCH SỬ ĐO BÊN TRÁI */
+        .history-panel {
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px;
+            width: 140px;
+            z-index: 5;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .history-panel h3 {
+            font-size: 11px;
+            color: #38bdf8;
+            margin-bottom: 8px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .history-list {
+            list-style: none;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .history-list li {
+            display: flex;
+            justify-content: space-between;
+            color: #e2e8f0;
+            font-family: monospace;
+        }
+        
+        .history-list li .idx { color: #94a3b8; }
+
         /* Vòng tròn hiển thị dB */
         .db-circle {
-            width: clamp(220px, 55vw, 380px);
-            height: clamp(220px, 55vw, 380px);
+            width: clamp(200px, 50vw, 360px);
+            height: clamp(200px, 50vw, 360px);
             background: rgba(15, 23, 42, 0.5);
             border: 6px solid var(--safe-color);
             border-radius: 50%;
@@ -131,12 +177,13 @@
         }
 
         .db-value {
-            font-size: clamp(70px, 16vw, 120px);
+            font-size: clamp(55px, 14vw, 110px);
             font-weight: 900;
             color: var(--safe-color);
             line-height: 1;
-            letter-spacing: -2px;
+            letter-spacing: -1px;
             transition: color 0.15s ease-out;
+            font-family: monospace;
         }
 
         .db-unit {
@@ -190,16 +237,26 @@
             <button id="calibrateBtn">Hiệu chuẩn</button>
         </div>
 
-        <div class="tool-row">
+        <div class="tool-row" style="display: flex;">
             <button id="measureBtn" class="start-btn" disabled>2. Bắt đầu đo</button>
+            <button id="resetBtn" class="reset-btn">3. Reset</button>
         </div>
         <div id="statusText">Chưa cấp quyền truy cập Micro.</div>
     </div>
 
     <!-- GIAO DIỆN HIỂN THỊ CHÍNH -->
     <div class="main-display">
+        
+        <!-- BẢNG GHI NHẬN TỰ ĐỘNG GÓC TRÁI -->
+        <div class="history-panel">
+            <h3>Chu kỳ (3s/Lần)</h3>
+            <ul class="history-list" id="historyList">
+                <!-- Dữ liệu sẽ tự động điền vào đây -->
+            </ul>
+        </div>
+
         <div id="dbCircle" class="db-circle">
-            <div id="dbDisplay" class="db-value">--</div>
+            <div id="dbDisplay" class="db-value">--.--</div>
             <div class="db-unit">dB</div>
             <div id="dbStatusMsg" class="db-status">Chờ đo đạc</div>
         </div>
@@ -221,22 +278,30 @@
     let animationId = null;
     let noiseFloorOffset = 0;
 
+    // Ngưỡng âm thanh
+    const THRESHOLD = 85; 
+
+    // Biến cho bảng ghi nhận tự động (3s / lần)
+    let autoLogInterval = null;
+    let logCount = 0;
+    let windowSumDb = 0;
+    let windowCountFrames = 0;
+
     // Các biến chạy ngầm
     let minDb = 999;
     let maxDb = -999;
     let sumDb = 0;
     let countDb = 0;
 
-    // Ngưỡng âm thanh
-    const THRESHOLD = 85; 
-
     const micBtn = document.getElementById('micBtn');
     const measureBtn = document.getElementById('measureBtn');
+    const resetBtn = document.getElementById('resetBtn');
     const calibrateBtn = document.getElementById('calibrateBtn');
     
     const dbDisplay = document.getElementById('dbDisplay');
     const dbCircle = document.getElementById('dbCircle');
     const dbStatusMsg = document.getElementById('dbStatusMsg');
+    const historyList = document.getElementById('historyList');
     
     const gainRange = document.getElementById('gainRange');
     const filterToggle = document.getElementById('filterToggle');
@@ -328,9 +393,16 @@
                 measureBtn.innerText = "Dừng đo";
                 measureBtn.className = "stop-btn";
                 micSelect.disabled = true; 
-                statusText.innerText = "Đang thu tín hiệu...";
+                statusText.innerText = "Đang đo đạc và ghi nhận tự động...";
 
-                minDb = 999; maxDb = -999; sumDb = 0; countDb = 0;
+                // Khởi động lại bộ ghi (Logger) nếu chưa chạy
+                if (logCount === 0 || logCount >= 10) {
+                    startAutoLogger();
+                } else {
+                    // Nếu đang đo dở dang mà dừng rồi bấm chạy lại thì nối tiếp
+                    autoLogInterval = setInterval(logDataTick, 3000);
+                }
+                
                 visualize();
             } catch (err) {
                 alert("Lỗi kết nối Micro: " + err);
@@ -340,16 +412,89 @@
         }
     });
 
+    // Hàm tick 3 giây của bộ tự động ghi
+    function logDataTick() {
+        if (!isMeasuring) return;
+
+        if (logCount >= 10) {
+            logCount = 0;
+            historyList.innerHTML = '';
+        }
+
+        let avgDb = windowCountFrames > 0 ? (windowSumDb / windowCountFrames) : 0;
+        logCount++;
+
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="idx">Lần ${logCount}:</span> <span>${avgDb.toFixed(2)}</span>`;
+        historyList.appendChild(li);
+
+        windowSumDb = 0;
+        windowCountFrames = 0;
+    }
+
+    function startAutoLogger() {
+        logCount = 0;
+        windowSumDb = 0;
+        windowCountFrames = 0;
+        historyList.innerHTML = ''; 
+        
+        if (autoLogInterval) clearInterval(autoLogInterval);
+        autoLogInterval = setInterval(logDataTick, 3000);
+    }
+
     function stopMeasurement() {
         if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
         if (audioCtx) audioCtx.close();
         cancelAnimationFrame(animationId);
+        if (autoLogInterval) clearInterval(autoLogInterval); 
+        
         isMeasuring = false;
         measureBtn.innerText = "Bắt đầu đo";
         measureBtn.className = "start-btn";
         micSelect.disabled = false;
-        statusText.innerText = "Đã dừng đo.";
+        statusText.innerText = "Đã tạm dừng.";
     }
+
+    // 3. Nút RESET (Làm mới toàn bộ không cần reload trang)
+    resetBtn.addEventListener('click', () => {
+        // Dừng hệ thống nếu đang chạy
+        if (isMeasuring) {
+            stopMeasurement();
+        }
+        
+        // Reset thuật toán ngầm
+        minDb = 999;
+        maxDb = -999;
+        sumDb = 0;
+        countDb = 0;
+        noiseFloorOffset = 0;
+
+        // Reset bảng tự động ghi góc trái
+        logCount = 0;
+        windowSumDb = 0;
+        windowCountFrames = 0;
+        historyList.innerHTML = '';
+
+        // Reset giao diện vòng tròn
+        dbDisplay.innerText = '--.--';
+        dbDisplay.style.color = 'var(--safe-color)';
+        dbCircle.style.borderColor = 'var(--safe-color)';
+        dbCircle.style.boxShadow = '0 0 30px rgba(34, 197, 94, 0.2)';
+        dbStatusMsg.innerText = "Chờ đo đạc";
+        dbStatusMsg.style.color = 'var(--safe-color)';
+        
+        // Reset thanh trượt
+        gainRange.value = 1;
+        document.getElementById('filterToggle').checked = true;
+
+        // Xóa đồ thị Canvas
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        canvasCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+        statusText.innerText = "Đã làm sạch toàn bộ dữ liệu máy đo.";
+    });
 
     calibrateBtn.addEventListener('click', () => {
         if (analyser && isMeasuring) {
@@ -364,9 +509,8 @@
 
     // Cập nhật giao diện động
     function updateUI(db) {
-        dbDisplay.innerText = db.toFixed(1);
+        dbDisplay.innerText = db.toFixed(2);
         
-        // Đổi màu cảnh báo
         if (db > THRESHOLD) {
             dbDisplay.style.color = 'var(--danger-color)';
             dbCircle.style.borderColor = 'var(--danger-color)';
@@ -407,17 +551,16 @@
             
             updateUI(db);
 
-            // Chạy ngầm
+            windowSumDb += db;
+            windowCountFrames++;
+            
             if (db < minDb) minDb = db;
             if (db > maxDb) maxDb = db;
             sumDb += db; countDb++;
 
-            // Vẽ Canvas sóng
             canvasCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
             canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
             canvasCtx.lineWidth = 2;
-            
-            // Màu sóng đổi theo ngưỡng
             canvasCtx.strokeStyle = db > THRESHOLD ? '#ef4444' : '#38bdf8';
             
             canvasCtx.beginPath();
