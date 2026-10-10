@@ -186,7 +186,7 @@
             display: flex;
             align-items: stretch;
             justify-content: stretch;
-            padding: 5px; 
+            padding: 0px; 
         }
 
         .db-box {
@@ -202,6 +202,7 @@
             box-shadow: 0 0 40px rgba(34, 197, 94, 0.15);
             transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
             box-sizing: border-box;
+            padding: 5px; /* Ép viền sát nhất có thể */
         }
 
         /* Gom số liệu và đơn vị nằm ngang với nhau, đồng bộ hóa màu sắc */
@@ -216,20 +217,21 @@
         }
 
         .db-value {
-            font-size: min(14cqw, 55cqh); 
+            /* Tăng kích thước tối đa (19cqw) để lấp đầy màn hình tốt nhất */
+            font-size: min(19cqw, 65cqh); 
             font-weight: 900;
             color: inherit; 
             line-height: 1;
-            letter-spacing: 2px;
             font-family: 'Courier New', Courier, monospace;
             font-variant-numeric: tabular-nums; 
         }
 
         .db-unit {
-            font-size: min(14cqw, 55cqh); 
+            /* Tăng kích thước bằng với số liệu */
+            font-size: min(19cqw, 65cqh); 
             font-weight: 900;
             color: inherit; 
-            font-family: 'Times New Roman', Times, serif;
+            font-family: 'Times New Roman', Times, serif; /* Giữ font Times New Roman */
         }
 
         /* ĐỒ THỊ BIỂU ĐỒ (dB vs Thời gian) */
@@ -252,13 +254,13 @@
         @media (max-width: 768px) {
             .main-display {
                 flex-direction: column; 
-                gap: 15px;
+                gap: 12px;
                 padding: 10px;
             }
             .history-panel {
                 width: 100%;
                 height: auto;
-                max-height: 160px; 
+                max-height: 150px; 
                 padding: 10px;
             }
             .history-list {
@@ -270,7 +272,7 @@
                 padding: 6px 8px;
             }
             .db-container {
-                padding: 0 5px;
+                padding: 0;
             }
             .db-box {
                 border-width: 6px;
@@ -319,8 +321,10 @@
         <!-- KHUNG CHỮ NHẬT LẤP ĐẦY KHÔNG GIAN -->
         <div class="db-container">
             <div id="dbBox" class="db-box">
+                <!-- Gom cụm số và dB vào 1 khối (Flex ngang) để đổi màu cùng lúc -->
                 <div id="dbReadout" class="db-readout">
-                    <div id="dbDisplay" class="db-value">000.00</div>
+                    <!-- Sửa lại mặc định 0.00 thay vì 000.00 -->
+                    <div id="dbDisplay" class="db-value">0.00</div>
                     <div class="db-unit">dB</div>
                 </div>
             </div>
@@ -343,7 +347,7 @@
     let animationId = null;
     let noiseFloorOffset = 0;
 
-    // Giới hạn đồ thị vẽ tối đa trên biểu đồ theo yêu cầu
+    // Giới hạn đồ thị vẽ tối đa trên biểu đồ
     const GRAPH_MAX_DB = 310; 
 
     // Biến cho bảng ghi nhận tự động
@@ -484,7 +488,8 @@
         let avgDb = windowCountFrames > 0 ? (windowSumDb / windowCountFrames) : 0;
         logCount++;
 
-        let formattedAvg = avgDb.toFixed(2).padStart(6, '0');
+        // Hiển thị lịch sử không có số 0 ở đầu, ví dụ 85.50 dB thay vì 085.50 dB
+        let formattedAvg = avgDb.toFixed(2);
 
         const li = document.createElement('li');
         li.innerHTML = `<span class="idx">Lần ${logCount}:</span> <span>${formattedAvg} dB</span>`;
@@ -530,7 +535,7 @@
         historyList.innerHTML = '';
         dbHistory = [];
 
-        dbDisplay.innerText = '000.00'; 
+        dbDisplay.innerText = '0.00'; 
         dbReadout.style.color = 'var(--safe-color)'; 
         dbBox.style.borderColor = 'var(--safe-color)';
         dbBox.style.boxShadow = '0 0 40px rgba(34, 197, 94, 0.15)';
@@ -556,10 +561,11 @@
     });
 
     function updateUI(db) {
-        let formattedDb = db.toFixed(2).padStart(6, '0');
+        // Chỉ lấy 2 số sau phẩy, bỏ đi số 0 vô nghĩa ở đầu
+        let formattedDb = db.toFixed(2);
         dbDisplay.innerText = formattedDb;
         
-        // Điều kiện mới: Dưới 30 hoặc trên 130 sẽ hiện màu Đỏ
+        // Điều kiện: Dưới 30 hoặc trên 130 sẽ hiện màu Đỏ
         if (db > 130 || db < 30) {
             dbReadout.style.color = 'var(--danger-color)'; 
             dbBox.style.borderColor = 'var(--danger-color)';
