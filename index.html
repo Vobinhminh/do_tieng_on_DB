@@ -12,9 +12,9 @@
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
             --border-color: rgba(255, 255, 255, 0.2);
-            --safe-color: #22c55e;   /* Xanh lá - An toàn */
-            --danger-color: #ef4444; /* Đỏ - Quá ngưỡng */
-            --reset-color: #f59e0b;  /* Vàng cam - Nút Reset */
+            --safe-color: #22c55e;   
+            --danger-color: #ef4444; 
+            --reset-color: #f59e0b;  
         }
 
         * {
@@ -23,18 +23,19 @@
             padding: 0;
         }
 
+        /* KHÓA CHẶT TRANG WEB TRONG KHUÔN HÌNH - KHÔNG CUỘN */
         body, html {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             background: linear-gradient(135deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
             color: var(--text-main);
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; 
             display: flex;
             flex-direction: column;
         }
 
-        /* TOOLBAR PHÍA TRÊN CÙNG */
+        /* ================= TOOLBAR PHÍA TRÊN ================= */
         .top-toolbar {
             background: var(--panel-bg);
             backdrop-filter: blur(10px);
@@ -45,6 +46,7 @@
             flex-direction: column;
             gap: 10px;
             z-index: 10;
+            flex-shrink: 0;
         }
 
         .tool-row {
@@ -107,109 +109,137 @@
             margin-top: -4px;
         }
 
-        /* KHU VỰC HIỂN THỊ CHÍNH */
+        /* ================= KHU VỰC HIỂN THỊ TRUNG TÂM ================= */
         .main-display {
-            flex: 1;
+            flex: 1; 
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
+            flex-direction: row; 
+            padding: 15px;
+            gap: 20px;
+            min-height: 0; 
+            box-sizing: border-box;
         }
 
-        /* BẢNG LỊCH SỬ ĐO BÊN TRÁI */
+        /* BẢNG LỊCH SỬ ĐO */
         .history-panel {
-            position: absolute;
-            left: 15px;
-            top: 15px;
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 12px;
-            width: 140px;
+            padding: 15px;
+            width: 240px;
+            height: 100%; 
             z-index: 5;
             backdrop-filter: blur(4px);
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
         }
 
         .history-panel h3 {
-            font-size: 11px;
+            font-size: 13px;
             color: #38bdf8;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             text-align: center;
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 6px;
+            padding-bottom: 8px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            flex-shrink: 0;
         }
 
         .history-list {
             list-style: none;
-            font-size: 12px;
+            font-size: 14px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 10px;
+            overflow-y: auto; 
+            flex: 1;
+            padding-right: 5px;
         }
+
+        .history-list::-webkit-scrollbar { width: 4px; }
+        .history-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        .history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
 
         .history-list li {
             display: flex;
             justify-content: space-between;
             color: #e2e8f0;
             font-family: monospace;
+            font-weight: 600;
+            background: rgba(255,255,255,0.05);
+            padding: 8px 12px;
+            border-radius: 6px;
         }
         
-        .history-list li .idx { color: #94a3b8; }
+        .history-list li .idx { color: #94a3b8; font-weight: normal; }
 
-        /* Vòng tròn hiển thị dB */
-        .db-circle {
-            width: clamp(200px, 50vw, 360px);
-            height: clamp(200px, 50vw, 360px);
+        /* ================= KHUNG CHỮ NHẬT LẤP ĐẦY KHÔNG GIAN ================= */
+        .db-container {
+            flex: 1; 
+            height: 100%;
+            min-width: 0; 
+            min-height: 0; 
+            display: flex;
+            align-items: stretch;
+            justify-content: stretch;
+            padding: 5px; 
+        }
+
+        .db-box {
+            flex: 1; 
+            container-type: size; 
             background: rgba(15, 23, 42, 0.5);
-            border: 6px solid var(--safe-color);
-            border-radius: 50%;
+            border: 8px solid var(--safe-color); 
+            border-radius: 30px; 
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0 30px rgba(34, 197, 94, 0.2);
-            transition: all 0.15s ease-out;
-            z-index: 2;
+            box-shadow: 0 0 40px rgba(34, 197, 94, 0.15);
+            transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+            box-sizing: border-box;
+        }
+
+        /* Gom số liệu và đơn vị nằm ngang với nhau, đồng bộ hóa màu sắc */
+        .db-readout {
+            display: flex;
+            align-items: baseline; 
+            justify-content: center;
+            gap: 1.5cqw; 
+            width: 100%;
+            color: var(--safe-color); 
+            transition: color 0.15s ease-out;
         }
 
         .db-value {
-            font-size: clamp(55px, 14vw, 110px);
+            font-size: min(14cqw, 55cqh); 
             font-weight: 900;
-            color: var(--safe-color);
+            color: inherit; 
             line-height: 1;
-            letter-spacing: -1px;
-            transition: color 0.15s ease-out;
-            font-family: monospace;
+            letter-spacing: 2px;
+            font-family: 'Courier New', Courier, monospace;
+            font-variant-numeric: tabular-nums; 
         }
 
         .db-unit {
-            font-size: clamp(16px, 3.5vw, 22px);
-            font-weight: 600;
-            color: var(--text-sub);
-            margin-top: 5px;
+            font-size: min(14cqw, 55cqh); 
+            font-weight: 900;
+            color: inherit; 
+            font-family: 'Times New Roman', Times, serif;
         }
 
-        .db-status {
-            font-size: clamp(12px, 2.5vw, 16px);
-            font-weight: 700;
-            margin-top: 8px;
-            padding: 4px 12px;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.1);
-            color: var(--safe-color);
-            transition: color 0.15s ease-out;
-        }
-
-        /* ĐỒ HỌA SÓNG ÂM DƯỚI ĐÁY */
+        /* ĐỒ THỊ BIỂU ĐỒ (dB vs Thời gian) */
         .canvas-container {
             width: 100%;
-            height: 150px;
-            background: rgba(0,0,0,0.3);
+            height: 180px; 
+            background: rgba(15, 23, 42, 0.9);
             border-top: 1px solid var(--border-color);
+            flex-shrink: 0; 
+            position: relative;
         }
 
         canvas {
@@ -218,14 +248,46 @@
             display: block;
         }
 
+        /* ================= RESPONSIVE ĐIỆN THOẠI (Mobile Layout) ================= */
+        @media (max-width: 768px) {
+            .main-display {
+                flex-direction: column; 
+                gap: 15px;
+                padding: 10px;
+            }
+            .history-panel {
+                width: 100%;
+                height: auto;
+                max-height: 160px; 
+                padding: 10px;
+            }
+            .history-list {
+                display: grid;
+                grid-template-columns: 1fr 1fr; 
+                gap: 6px;
+            }
+            .history-list li {
+                padding: 6px 8px;
+            }
+            .db-container {
+                padding: 0 5px;
+            }
+            .db-box {
+                border-width: 6px;
+                border-radius: 20px;
+            }
+            .canvas-container {
+                height: 130px; 
+            }
+        }
     </style>
 </head>
 <body>
 
-    <!-- BẢNG ĐIỀU KHIỂN GỌN GÀNG PHÍA TRÊN -->
+    <!-- BẢNG ĐIỀU KHIỂN -->
     <div class="top-toolbar">
         <div class="tool-row">
-            <button id="micBtn">1. Quét Micro</button>
+            <button id="micBtn">1. Cấp quyền Micro</button>
             <select id="micSelect">
                 <option value="">-- Chọn thiết bị thu --</option>
             </select>
@@ -241,29 +303,32 @@
             <button id="measureBtn" class="start-btn" disabled>2. Bắt đầu đo</button>
             <button id="resetBtn" class="reset-btn">3. Reset</button>
         </div>
-        <div id="statusText">Chưa cấp quyền truy cập Micro.</div>
+        <div id="statusText">Vui lòng Cấp quyền Micro để bắt đầu.</div>
     </div>
 
     <!-- GIAO DIỆN HIỂN THỊ CHÍNH -->
     <div class="main-display">
-        
-        <!-- BẢNG GHI NHẬN TỰ ĐỘNG GÓC TRÁI -->
+        <!-- BẢNG GHI NHẬN TỰ ĐỘNG -->
         <div class="history-panel">
-            <h3>Chu kỳ (5s/Lần)</h3>
+            <h3>Bảng Số Liệu (5 Lần x 5s)</h3>
             <ul class="history-list" id="historyList">
                 <!-- Dữ liệu sẽ tự động điền vào đây -->
             </ul>
         </div>
 
-        <div id="dbCircle" class="db-circle">
-            <div id="dbDisplay" class="db-value">--.--</div>
-            <div class="db-unit">dB</div>
-            <div id="dbStatusMsg" class="db-status">Chờ đo đạc</div>
+        <!-- KHUNG CHỮ NHẬT LẤP ĐẦY KHÔNG GIAN -->
+        <div class="db-container">
+            <div id="dbBox" class="db-box">
+                <div id="dbReadout" class="db-readout">
+                    <div id="dbDisplay" class="db-value">000.00</div>
+                    <div class="db-unit">dB</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- CANVAS SÓNG ÂM -->
-    <div class="canvas-container">
+    <!-- ĐỒ THỊ BIỂU ĐỒ (dB vs Thời gian) -->
+    <div class="canvas-container" id="canvasContainer">
         <canvas id="waveformCanvas"></canvas>
     </div>
 
@@ -278,29 +343,26 @@
     let animationId = null;
     let noiseFloorOffset = 0;
 
-    // Ngưỡng âm thanh
-    const THRESHOLD = 85; 
+    // Giới hạn đồ thị vẽ tối đa trên biểu đồ theo yêu cầu
+    const GRAPH_MAX_DB = 310; 
 
-    // Biến cho bảng ghi nhận tự động (5s / lần, tối đa 3 lần)
+    // Biến cho bảng ghi nhận tự động
     let autoLogInterval = null;
     let logCount = 0;
     let windowSumDb = 0;
     let windowCountFrames = 0;
 
-    // Các biến chạy ngầm
-    let minDb = 999;
-    let maxDb = -999;
-    let sumDb = 0;
-    let countDb = 0;
+    // Lịch sử điểm vẽ đồ thị dB theo thời gian
+    let dbHistory = [];
 
     const micBtn = document.getElementById('micBtn');
     const measureBtn = document.getElementById('measureBtn');
     const resetBtn = document.getElementById('resetBtn');
     const calibrateBtn = document.getElementById('calibrateBtn');
     
+    const dbReadout = document.getElementById('dbReadout');
     const dbDisplay = document.getElementById('dbDisplay');
-    const dbCircle = document.getElementById('dbCircle');
-    const dbStatusMsg = document.getElementById('dbStatusMsg');
+    const dbBox = document.getElementById('dbBox'); 
     const historyList = document.getElementById('historyList');
     
     const gainRange = document.getElementById('gainRange');
@@ -310,6 +372,9 @@
     
     const canvas = document.getElementById('waveformCanvas');
     const canvasCtx = canvas.getContext('2d');
+
+    window.onload = drawEmptyGraph;
+    window.onresize = () => { if(!isMeasuring) drawEmptyGraph(); };
 
     // 1. Quét Micro
     micBtn.addEventListener('click', async () => {
@@ -336,11 +401,12 @@
 
             tempStream.getTracks().forEach(track => track.stop());
 
-            micBtn.innerText = "Đã quét ✓";
+            micBtn.innerText = "Đã kết nối ✓"; 
+            micBtn.style.backgroundColor = "#16a34a"; 
             measureBtn.disabled = false;
-            statusText.innerText = "Đã tìm thấy Micro. Bấm Bắt đầu đo.";
+            statusText.innerText = "Đã kết nối Micro. Hãy bấm Bắt đầu đo."; 
         } catch (err) {
-            alert("Lỗi Micro: " + err);
+            alert("Lỗi Micro: Vui lòng cho phép quyền truy cập Micro. " + err);
         }
     });
 
@@ -393,59 +459,57 @@
                 measureBtn.innerText = "Dừng đo";
                 measureBtn.className = "stop-btn";
                 micSelect.disabled = true; 
-                statusText.innerText = "Đang đo đạc và ghi nhận tự động...";
+                statusText.innerText = "Đang đo... (Tự động dừng sau 5 lần x 5s)";
 
-                // Khởi động lại bộ ghi (Logger) nếu chưa chạy
-                if (logCount === 0 || logCount >= 3) {
-                    startAutoLogger();
-                } else {
-                    // Nếu đang đo dở dang mà dừng rồi bấm chạy lại thì nối tiếp
-                    autoLogInterval = setInterval(logDataTick, 5000);
+                if (logCount >= 5) {
+                    logCount = 0;
+                    historyList.innerHTML = '';
+                    dbHistory = []; 
                 }
                 
+                startAutoLogger();
                 visualize();
             } catch (err) {
                 alert("Lỗi kết nối Micro: " + err);
             }
         } else {
             stopMeasurement();
+            statusText.innerText = "Đã tạm dừng thủ công. Bấm Bắt đầu đo để tiếp tục.";
         }
     });
 
-    // Hàm tick 5 giây của bộ tự động ghi
     function logDataTick() {
         if (!isMeasuring) return;
-
-        // Xóa bảng nếu đã đạt 3 lần đo
-        if (logCount >= 3) {
-            logCount = 0;
-            historyList.innerHTML = '';
-        }
 
         let avgDb = windowCountFrames > 0 ? (windowSumDb / windowCountFrames) : 0;
         logCount++;
 
+        let formattedAvg = avgDb.toFixed(2).padStart(6, '0');
+
         const li = document.createElement('li');
-        li.innerHTML = `<span class="idx">Lần ${logCount}:</span> <span>${avgDb.toFixed(2)}</span>`;
+        li.innerHTML = `<span class="idx">Lần ${logCount}:</span> <span>${formattedAvg} dB</span>`;
         historyList.appendChild(li);
 
         windowSumDb = 0;
         windowCountFrames = 0;
+
+        if (logCount >= 5) {
+            stopMeasurement();
+            statusText.innerText = "Đã hoàn thành thu thập đủ 5 lần (25 giây).";
+        }
     }
 
     function startAutoLogger() {
-        logCount = 0;
         windowSumDb = 0;
         windowCountFrames = 0;
-        historyList.innerHTML = ''; 
-        
         if (autoLogInterval) clearInterval(autoLogInterval);
-        autoLogInterval = setInterval(logDataTick, 5000);
+        autoLogInterval = setInterval(logDataTick, 5000); 
     }
 
     function stopMeasurement() {
         if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
         if (audioCtx) audioCtx.close();
+        
         cancelAnimationFrame(animationId);
         if (autoLogInterval) clearInterval(autoLogInterval); 
         
@@ -453,47 +517,28 @@
         measureBtn.innerText = "Bắt đầu đo";
         measureBtn.className = "start-btn";
         micSelect.disabled = false;
-        statusText.innerText = "Đã tạm dừng.";
     }
 
-    // 3. Nút RESET (Làm mới toàn bộ không cần reload trang)
+    // 3. Nút RESET
     resetBtn.addEventListener('click', () => {
-        // Dừng hệ thống nếu đang chạy
-        if (isMeasuring) {
-            stopMeasurement();
-        }
+        if (isMeasuring) stopMeasurement();
         
-        // Reset thuật toán ngầm
-        minDb = 999;
-        maxDb = -999;
-        sumDb = 0;
-        countDb = 0;
         noiseFloorOffset = 0;
-
-        // Reset bảng tự động ghi góc trái
         logCount = 0;
         windowSumDb = 0;
         windowCountFrames = 0;
         historyList.innerHTML = '';
+        dbHistory = [];
 
-        // Reset giao diện vòng tròn
-        dbDisplay.innerText = '--.--';
-        dbDisplay.style.color = 'var(--safe-color)';
-        dbCircle.style.borderColor = 'var(--safe-color)';
-        dbCircle.style.boxShadow = '0 0 30px rgba(34, 197, 94, 0.2)';
-        dbStatusMsg.innerText = "Chờ đo đạc";
-        dbStatusMsg.style.color = 'var(--safe-color)';
+        dbDisplay.innerText = '000.00'; 
+        dbReadout.style.color = 'var(--safe-color)'; 
+        dbBox.style.borderColor = 'var(--safe-color)';
+        dbBox.style.boxShadow = '0 0 40px rgba(34, 197, 94, 0.15)';
         
-        // Reset thanh trượt
         gainRange.value = 1;
         document.getElementById('filterToggle').checked = true;
 
-        // Xóa đồ thị Canvas
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
-        canvasCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-        canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-
+        drawEmptyGraph();
         statusText.innerText = "Đã làm sạch toàn bộ dữ liệu máy đo.";
     });
 
@@ -504,27 +549,78 @@
             let sum = buffer.reduce((a, b) => a + b, 0);
             let avg = sum / buffer.length;
             noiseFloorOffset = avg > 0 ? 20 * Math.log10(avg) : 0;
-            alert("Hiệu chuẩn xong!");
+            alert("Hiệu chuẩn tiếng ồn phòng thành công!");
+        } else {
+            alert("Vui lòng ấn Bắt đầu đo trước khi hiệu chuẩn!");
         }
     });
 
-    // Cập nhật giao diện động
     function updateUI(db) {
-        dbDisplay.innerText = db.toFixed(2);
+        let formattedDb = db.toFixed(2).padStart(6, '0');
+        dbDisplay.innerText = formattedDb;
         
-        if (db > THRESHOLD) {
-            dbDisplay.style.color = 'var(--danger-color)';
-            dbCircle.style.borderColor = 'var(--danger-color)';
-            dbCircle.style.boxShadow = '0 0 40px rgba(239, 68, 68, 0.4)';
-            dbStatusMsg.innerText = "Quá ngưỡng nghe";
-            dbStatusMsg.style.color = 'var(--danger-color)';
+        // Điều kiện mới: Dưới 30 hoặc trên 130 sẽ hiện màu Đỏ
+        if (db > 130 || db < 30) {
+            dbReadout.style.color = 'var(--danger-color)'; 
+            dbBox.style.borderColor = 'var(--danger-color)';
+            dbBox.style.boxShadow = '0 0 50px rgba(239, 68, 68, 0.3)';
         } else {
-            dbDisplay.style.color = 'var(--safe-color)';
-            dbCircle.style.borderColor = 'var(--safe-color)';
-            dbCircle.style.boxShadow = '0 0 30px rgba(34, 197, 94, 0.2)';
-            dbStatusMsg.innerText = "Âm thanh nghe được";
-            dbStatusMsg.style.color = 'var(--safe-color)';
+            dbReadout.style.color = 'var(--safe-color)'; 
+            dbBox.style.borderColor = 'var(--safe-color)';
+            dbBox.style.boxShadow = '0 0 40px rgba(34, 197, 94, 0.15)';
         }
+    }
+
+    function drawGraphGrid() {
+        canvasCtx.fillStyle = '#0f172a';
+        canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+        canvasCtx.lineWidth = 1;
+        canvasCtx.font = '11px sans-serif';
+
+        // Tọa độ các đường giới hạn
+        let y130 = canvas.height - (130 / GRAPH_MAX_DB) * canvas.height;
+        let y30 = canvas.height - (30 / GRAPH_MAX_DB) * canvas.height;
+
+        // Vẽ vạch 130 dB
+        canvasCtx.beginPath();
+        canvasCtx.setLineDash([5, 5]);
+        canvasCtx.moveTo(0, y130);
+        canvasCtx.lineTo(canvas.width, y130);
+        canvasCtx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+        canvasCtx.stroke();
+
+        // Vẽ vạch 30 dB
+        canvasCtx.beginPath();
+        canvasCtx.moveTo(0, y30);
+        canvasCtx.lineTo(canvas.width, y30);
+        canvasCtx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+        canvasCtx.stroke();
+        canvasCtx.setLineDash([]);
+
+        // Vẽ trục X và Y
+        canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        canvasCtx.beginPath();
+        canvasCtx.moveTo(0, canvas.height - 1);
+        canvasCtx.lineTo(canvas.width, canvas.height - 1);
+        canvasCtx.moveTo(1, 0);
+        canvasCtx.lineTo(1, canvas.height);
+        canvasCtx.stroke();
+
+        canvasCtx.fillStyle = '#94a3b8';
+        canvasCtx.fillText(GRAPH_MAX_DB + " dB", 5, 15);
+        canvasCtx.fillText("130 dB", 5, y130 - 5);
+        canvasCtx.fillText("30 dB", 5, y30 - 5);
+        canvasCtx.fillText("0 dB", 5, canvas.height - 5);
+        
+        let textWidth = canvasCtx.measureText("Thời gian (s) ➔").width;
+        canvasCtx.fillText("Thời gian (s) ➔", canvas.width - textWidth - 10, canvas.height - 5);
+    }
+
+    function drawEmptyGraph() {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        drawGraphGrid();
     }
 
     function visualize() {
@@ -546,36 +642,52 @@
             }
             let rms = Math.sqrt(sumSquares / bufferLength);
             
-            let db = rms > 0 ? (20 * Math.log10(rms * 100) + 60) - (noiseFloorOffset * 0.1) : 30;
-            if (db < 30) db = 30;
-            db = Math.min(db, 130);
+            let db = rms > 0 ? (20 * Math.log10(rms * 100) + 60) - (noiseFloorOffset * 0.1) : 0;
+            
+            // Giới hạn dải đo lên 310 dB
+            if (db < 0) db = 0;
+            if (db > GRAPH_MAX_DB) db = GRAPH_MAX_DB;
             
             updateUI(db);
 
+            dbHistory.push(db);
+            if (dbHistory.length > canvas.width) {
+                dbHistory.shift(); 
+            }
+
             windowSumDb += db;
             windowCountFrames++;
-            
-            if (db < minDb) minDb = db;
-            if (db > maxDb) maxDb = db;
-            sumDb += db; countDb++;
 
-            canvasCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-            canvasCtx.lineWidth = 2;
-            canvasCtx.strokeStyle = db > THRESHOLD ? '#ef4444' : '#38bdf8';
-            
-            canvasCtx.beginPath();
-            let sliceWidth = canvas.width * 1.0 / bufferLength;
-            let x = 0;
-            for (let i = 0; i < bufferLength; i++) {
-                let v = dataArray[i] / 128.0;
-                let y = v * canvas.height / 2;
-                if (i === 0) canvasCtx.moveTo(x, y);
-                else canvasCtx.lineTo(x, y);
-                x += sliceWidth;
+            drawGraphGrid();
+
+            if (dbHistory.length > 1) {
+                let grad = canvasCtx.createLinearGradient(0, 0, 0, canvas.height);
+                
+                // Cài đặt màu Đỏ (Red) cho < 30 và > 130, Xanh lá (Green) cho 30 -> 130
+                let p130 = (GRAPH_MAX_DB - 130) / GRAPH_MAX_DB; 
+                let p30 = (GRAPH_MAX_DB - 30) / GRAPH_MAX_DB;   
+                
+                grad.addColorStop(0, '#ef4444');        
+                grad.addColorStop(Math.max(0, p130), '#ef4444'); 
+                grad.addColorStop(Math.min(1, p130 + 0.01), '#22c55e'); 
+                grad.addColorStop(Math.max(0, p30 - 0.01), '#22c55e'); 
+                grad.addColorStop(Math.min(1, p30), '#ef4444');        
+                grad.addColorStop(1, '#ef4444');        
+
+                canvasCtx.beginPath();
+                canvasCtx.lineWidth = 2.5;
+                canvasCtx.strokeStyle = grad;
+                canvasCtx.lineJoin = 'round';
+
+                for (let i = 0; i < dbHistory.length; i++) {
+                    let x = i; 
+                    let y = canvas.height - (dbHistory[i] / GRAPH_MAX_DB) * canvas.height;
+                    
+                    if (i === 0) canvasCtx.moveTo(x, y);
+                    else canvasCtx.lineTo(x, y);
+                }
+                canvasCtx.stroke();
             }
-            canvasCtx.lineTo(canvas.width, canvas.height / 2);
-            canvasCtx.stroke();
         }
         draw();
     }
