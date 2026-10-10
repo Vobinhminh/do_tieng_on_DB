@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dao Động Ký & Cường Độ Âm</title>
+    <style>
+        :root {
+            --bg-top: #1e293b;
+            --bg-bottom: #0f172a;
+            --panel-bg: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.2);
+            --safe-color: #22c55e;   /* Xanh lá - An toàn */
+            --danger-color: #ef4444; /* Đỏ - Quá ngưỡng */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+            color: var(--text-main);
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* TOOLBAR PHÍA TRÊN CÙNG (GỌN GÀNG) */
+        .top-toolbar {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .tool-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tool-row label {
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        select {
+            flex: 1;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.9);
+            font-size: 13px;
+            outline: none;
+            min-width: 120px;
+        }
+
+        input[type="range"] {
+            width: 100px;
+            accent-color: #38bdf8;
+        }
+
+        button {
+            background-color: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        button:active { transform: scale(0.95); }
+        button:disabled { background-color: #64748b; color: #cbd5e1; cursor: not-allowed; }
+        button.start-btn { background-color: var(--safe-color); color: white; flex: 1; padding: 10px; font-size: 14px;}
+        button.stop-btn { background-color: var(--danger-color); color: white; flex: 1; padding: 10px; font-size: 14px;}
+
+        #statusText {
+            font-size: 12px;
+            color: #cbd5e1;
+            text-align: center;
+            width: 100%;
+            margin-top: -4px;
+        }
+
+        /* KHU VỰC HIỂN THỊ CHÍNH (FULL MÀN HÌNH) */
+        .main-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Vòng tròn hiển thị dB */
+        .db-circle {
+            width: clamp(220px, 55vw, 380px);
+            height: clamp(220px, 55vw, 380px);
+            background: rgba(15, 23, 42, 0.5);
+            border: 6px solid var(--safe-color);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.2);
+            transition: all 0.15s ease-out;
+            z-index: 2;
+        }
+
+        .db-value {
+            font-size: clamp(70px, 16vw, 120px);
+            font-weight: 900;
+            color: var(--safe-color);
+            line-height: 1;
+            letter-spacing: -2px;
+            transition: color 0.15s ease-out;
+        }
+
+        .db-unit {
+            font-size: clamp(16px, 3.5vw, 22px);
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-top: 5px;
+        }
+
+        .db-status {
+            font-size: clamp(12px, 2.5vw, 16px);
+            font-weight: 700;
+            margin-top: 8px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+            color: var(--safe-color);
+            transition: color 0.15s ease-out;
+        }
+
+        /* ĐỒ HỌA SÓNG ÂM DƯỚI ĐÁY */
+        .canvas-container {
+            width: 100%;
+            height: 150px;
+            background: rgba(0,0,0,0.3);
+            border-top: 1px solid var(--border-color);
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- BẢNG ĐIỀU KHIỂN GỌN GÀNG PHÍA TRÊN -->
+    <div class="top-toolbar">
+        <div class="tool-row">
+            <button id="micBtn">1. Quét Micro</button>
+            <select id="micSelect">
+                <option value="">-- Chọn thiết bị thu --</option>
+            </select>
+        </div>
+        
+        <div class="tool-row">
+            <label>Khuyếch đại: <input type="range" id="gainRange" min="1" max="50" step="0.5" value="1"></label>
+            <label><input type="checkbox" id="filterToggle" checked> Lọc âm</label>
+            <button id="calibrateBtn">Hiệu chuẩn</button>
+        </div>
+
+        <div class="tool-row">
+            <button id="measureBtn" class="start-btn" disabled>2. Bắt đầu đo</button>
+        </div>
+        <div id="statusText">Chưa cấp quyền truy cập Micro.</div>
+    </div>
+
+    <!-- GIAO DIỆN HIỂN THỊ CHÍNH -->
+    <div class="main-display">
+        <div id="dbCircle" class="db-circle">
+            <div id="dbDisplay" class="db-value">--</div>
+            <div class="db-unit">dB</div>
+            <div id="dbStatusMsg" class="db-status">Chờ đo đạc</div>
+        </div>
+    </div>
+
+    <!-- CANVAS SÓNG ÂM -->
+    <div class="canvas-container">
+        <canvas id="waveformCanvas"></canvas>
+    </div>
+
+<script>
+    let audioCtx = null;
+    let analyser = null;
+    let microphone = null;
+    let gainNode = null;
+    let biquadFilter = null;
+    let mediaStream = null;
+    let isMeasuring = false;
+    let animationId = null;
+    let noiseFloorOffset = 0;
+
+    // Các biến chạy ngầm
+    let minDb = 999;
+    let maxDb = -999;
+    let sumDb = 0;
+    let countDb = 0;
+
+    // Ngưỡng âm thanh
+    const THRESHOLD = 85; 
+
+    const micBtn = document.getElementById('micBtn');
+    const measureBtn = document.getElementById('measureBtn');
+    const calibrateBtn = document.getElementById('calibrateBtn');
+    
+    const dbDisplay = document.getElementById('dbDisplay');
+    const dbCircle = document.getElementById('dbCircle');
+    const dbStatusMsg = document.getElementById('dbStatusMsg');
+    
+    const gainRange = document.getElementById('gainRange');
+    const filterToggle = document.getElementById('filterToggle');
+    const statusText = document.getElementById('statusText');
+    const micSelect = document.getElementById('micSelect');
+    
+    const canvas = document.getElementById('waveformCanvas');
+    const canvasCtx = canvas.getContext('2d');
+
+    // 1. Quét Micro
+    micBtn.addEventListener('click', async () => {
+        try {
+            let tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const audioInputs = devices.filter(device => device.kind === 'audioinput');
+            
+            micSelect.innerHTML = ''; 
+            
+            if (audioInputs.length === 0) {
+                const option = document.createElement('option');
+                option.text = "Không tìm thấy Micro!";
+                micSelect.appendChild(option);
+                throw new Error("No input devices found.");
+            }
+
+            audioInputs.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.text = device.label || `Micro ${index + 1}`;
+                micSelect.appendChild(option);
+            });
+
+            tempStream.getTracks().forEach(track => track.stop());
+
+            micBtn.innerText = "Đã quét ✓";
+            measureBtn.disabled = false;
+            statusText.innerText = "Đã tìm thấy Micro. Bấm Bắt đầu đo.";
+        } catch (err) {
+            alert("Lỗi Micro: " + err);
+        }
+    });
+
+    gainRange.addEventListener('input', (e) => {
+        if (gainNode) gainNode.gain.value = parseFloat(e.target.value);
+    });
+
+    filterToggle.addEventListener('change', (e) => {
+        if (biquadFilter && audioCtx) {
+            biquadFilter.type = e.target.checked ? 'bandpass' : 'allpass';
+            biquadFilter.frequency.value = 1000;
+        }
+    });
+
+    // 2. Bắt đầu đo
+    measureBtn.addEventListener('click', async () => {
+        if (!isMeasuring) {
+            try {
+                const selectedDeviceId = micSelect.value;
+                const constraints = {
+                    audio: {
+                        deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
+                        echoCancellation: false, 
+                        noiseSuppression: false, 
+                        autoGainControl: false
+                    },
+                    video: false
+                };
+
+                mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                microphone = audioCtx.createMediaStreamSource(mediaStream);
+                
+                biquadFilter = audioCtx.createBiquadFilter();
+                biquadFilter.type = filterToggle.checked ? 'bandpass' : 'allpass';
+                biquadFilter.frequency.value = 1000;
+
+                gainNode = audioCtx.createGain();
+                gainNode.gain.value = parseFloat(gainRange.value);
+
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 1024;
+                analyser.smoothingTimeConstant = 0.8;
+
+                microphone.connect(biquadFilter);
+                biquadFilter.connect(gainNode);
+                gainNode.connect(analyser);
+
+                isMeasuring = true;
+                measureBtn.innerText = "Dừng đo";
+                measureBtn.className = "stop-btn";
+                micSelect.disabled = true; 
+                statusText.innerText = "Đang thu tín hiệu...";
+
+                minDb = 999; maxDb = -999; sumDb = 0; countDb = 0;
+                visualize();
+            } catch (err) {
+                alert("Lỗi kết nối Micro: " + err);
+            }
+        } else {
+            stopMeasurement();
+        }
+    });
+
+    function stopMeasurement() {
+        if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+        if (audioCtx) audioCtx.close();
+        cancelAnimationFrame(animationId);
+        isMeasuring = false;
+        measureBtn.innerText = "Bắt đầu đo";
+        measureBtn.className = "start-btn";
+        micSelect.disabled = false;
+        statusText.innerText = "Đã dừng đo.";
+    }
+
+    calibrateBtn.addEventListener('click', () => {
+        if (analyser && isMeasuring) {
+            const buffer = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteFrequencyData(buffer);
+            let sum = buffer.reduce((a, b) => a + b, 0);
+            let avg = sum / buffer.length;
+            noiseFloorOffset = avg > 0 ? 20 * Math.log10(avg) : 0;
+            alert("Hiệu chuẩn xong!");
+        }
+    });
+
+    // Cập nhật giao diện động
+    function updateUI(db) {
+        dbDisplay.innerText = db.toFixed(1);
+        
+        // Đổi màu cảnh báo
+        if (db > THRESHOLD) {
+            dbDisplay.style.color = 'var(--danger-color)';
+            dbCircle.style.borderColor = 'var(--danger-color)';
+            dbCircle.style.boxShadow = '0 0 40px rgba(239, 68, 68, 0.4)';
+            dbStatusMsg.innerText = "Quá ngưỡng nghe";
+            dbStatusMsg.style.color = 'var(--danger-color)';
+        } else {
+            dbDisplay.style.color = 'var(--safe-color)';
+            dbCircle.style.borderColor = 'var(--safe-color)';
+            dbCircle.style.boxShadow = '0 0 30px rgba(34, 197, 94, 0.2)';
+            dbStatusMsg.innerText = "Âm thanh nghe được";
+            dbStatusMsg.style.color = 'var(--safe-color)';
+        }
+    }
+
+    function visualize() {
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+
+        function draw() {
+            if (!isMeasuring) return;
+            animationId = requestAnimationFrame(draw);
+            analyser.getByteTimeDomainData(dataArray);
+
+            let sumSquares = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                let norm = (dataArray[i] - 128) / 128;
+                sumSquares += norm * norm;
+            }
+            let rms = Math.sqrt(sumSquares / bufferLength);
+            
+            let db = rms > 0 ? (20 * Math.log10(rms * 100) + 60) - (noiseFloorOffset * 0.1) : 30;
+            if (db < 30) db = 30;
+            db = Math.min(db, 130);
+            
+            updateUI(db);
+
+            // Chạy ngầm
+            if (db < minDb) minDb = db;
+            if (db > maxDb) maxDb = db;
+            sumDb += db; countDb++;
+
+            // Vẽ Canvas sóng
+            canvasCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+            canvasCtx.lineWidth = 2;
+            
+            // Màu sóng đổi theo ngưỡng
+            canvasCtx.strokeStyle = db > THRESHOLD ? '#ef4444' : '#38bdf8';
+            
+            canvasCtx.beginPath();
+            let sliceWidth = canvas.width * 1.0 / bufferLength;
+            let x = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                let v = dataArray[i] / 128.0;
+                let y = v * canvas.height / 2;
+                if (i === 0) canvasCtx.moveTo(x, y);
+                else canvasCtx.lineTo(x, y);
+                x += sliceWidth;
+            }
+            canvasCtx.lineTo(canvas.width, canvas.height / 2);
+            canvasCtx.stroke();
+        }
+        draw();
+    }
+</script>
+
+</body>
+</html>
