@@ -309,7 +309,7 @@
     <div class="main-display">
         <!-- BẢNG GHI NHẬN TỰ ĐỘNG -->
         <div class="history-panel">
-            <h3>Bảng Số Liệu (5 Lần x 5s)</h3>
+            <h3>Bảng Số Liệu (5 Mẫu x 2s)</h3>
             <ul class="history-list" id="historyList">
                 <!-- Dữ liệu sẽ tự động điền vào đây -->
             </ul>
@@ -345,7 +345,7 @@
 
     const GRAPH_MAX_DB = 310; 
 
-    // Biến cho bảng ghi nhận tự động
+    // Biến cho bảng ghi nhận tự động (Đổi thành 2 giây mỗi mẫu)
     let autoLogInterval = null;
     let logCount = 0;
     let windowSumDb = 0;
@@ -457,7 +457,7 @@
                 measureBtn.innerText = "Dừng đo";
                 measureBtn.className = "stop-btn";
                 micSelect.disabled = true; 
-                statusText.innerText = "Đang đo... (Đủ 5 mẫu sẽ hiển thị và tạm dừng 6 giây để ghi chép)";
+                statusText.innerText = "Đang đo (2s/mẫu)... Mẫu thứ 5 sẽ khóa lên khung chính trong 5 giây.";
 
                 if (logCount >= 5) {
                     logCount = 0;
@@ -491,18 +491,30 @@
         windowSumDb = 0;
         windowCountFrames = 0;
 
-        // Khi đã ghi đủ mẫu thứ 5: Hiển thị hoàn tất và tạm dừng 6 giây để người dùng ghi chép
+        // Khi vừa ghi nhận xong lần thứ 5: Khóa giá trị này lên khung chính và tạm dừng 5 giây
         if (logCount >= 5) {
             isPausedForReview = true;
-            statusText.innerText = "Đã đủ 5 mẫu! Đang hiển thị để ghi chép (tạm dừng 6 giây)...";
+            
+            dbDisplay.innerText = formattedAvg;
+            if (avgDb > 130 || avgDb < 30) {
+                dbReadout.style.color = 'var(--danger-color)'; 
+                dbBox.style.borderColor = 'var(--danger-color)';
+                dbBox.style.boxShadow = '0 0 50px rgba(239, 68, 68, 0.3)';
+            } else {
+                dbReadout.style.color = 'var(--safe-color)'; 
+                dbBox.style.borderColor = 'var(--safe-color)';
+                dbBox.style.boxShadow = '0 0 40px rgba(34, 197, 94, 0.15)';
+            }
+
+            statusText.innerText = `Đã ghi nhận Lần 5 (${formattedAvg} dB). Đang giữ màn hình để ghi chép (5 giây)...`;
             
             setTimeout(() => {
                 if (!isMeasuring) return;
-                historyList.innerHTML = ''; // Xóa bảng sau khi hết 6 giây
-                logCount = 0;               // Reset bộ đếm về 0
-                isPausedForReview = false;  // Cho phép tiếp tục vòng lặp đo đợt mới
+                historyList.innerHTML = ''; // Xóa bảng sau 5 giây
+                logCount = 0;               // Reset bộ đếm
+                isPausedForReview = false;  // Tiếp tục đo đợt mới
                 statusText.innerText = "Đang đo đợt tiếp theo...";
-            }, 6000); // 6 giây nghỉ nhìn số liệu
+            }, 5000); // 5 giây nghỉ
         } else {
             statusText.innerText = `Đang đo... (Mẫu ${logCount}/5)`;
         }
@@ -512,7 +524,7 @@
         windowSumDb = 0;
         windowCountFrames = 0;
         if (autoLogInterval) clearInterval(autoLogInterval);
-        autoLogInterval = setInterval(logDataTick, 5000); 
+        autoLogInterval = setInterval(logDataTick, 2000); // 2 giây mỗi mẫu
     }
 
     function stopMeasurement() {
@@ -566,6 +578,8 @@
     });
 
     function updateUI(db) {
+        if (isPausedForReview) return;
+
         let formattedDb = db.toFixed(2);
         dbDisplay.innerText = formattedDb;
         
