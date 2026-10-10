@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dao Động Ký & Cường Độ Âm</title>
+    <!-- Thư viện tạo mã QR tự động -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root {
             --bg-top: #1e293b;
@@ -41,12 +43,13 @@
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border-color);
-            padding: 12px 15px;
+            padding: 10px 15px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             z-index: 10;
             flex-shrink: 0;
+            position: relative;
         }
 
         .tool-row {
@@ -55,6 +58,27 @@
             justify-content: space-between;
             gap: 10px;
             flex-wrap: wrap;
+            padding-right: 80px; /* Chừa khoảng trống cho khung QR ở góc */
+        }
+
+        /* Khung chứa mã QR nhỏ gọn ở góc trên bên phải */
+        .qr-corner {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: white;
+            padding: 4px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .qr-corner span {
+            font-size: 9px;
+            color: #0f172a;
+            font-weight: bold;
+            margin-top: 2px;
         }
 
         .tool-row label {
@@ -67,7 +91,7 @@
 
         select {
             flex: 1;
-            padding: 8px;
+            padding: 6px;
             border-radius: 6px;
             border: 1px solid var(--border-color);
             background: rgba(255,255,255,0.9);
@@ -85,7 +109,7 @@
             background-color: #38bdf8;
             color: #0f172a;
             border: none;
-            padding: 8px 12px;
+            padding: 6px 12px;
             font-size: 13px;
             font-weight: 700;
             border-radius: 6px;
@@ -97,16 +121,16 @@
         button:active { transform: scale(0.95); }
         button:disabled { background-color: #64748b; color: #cbd5e1; cursor: not-allowed; }
         
-        button.start-btn { background-color: var(--safe-color); color: white; flex: 2; padding: 10px; font-size: 14px;}
-        button.stop-btn { background-color: var(--danger-color); color: white; flex: 2; padding: 10px; font-size: 14px;}
-        button.reset-btn { background-color: var(--reset-color); color: white; flex: 1; padding: 10px; font-size: 14px;}
+        button.start-btn { background-color: var(--safe-color); color: white; flex: 2; padding: 8px; font-size: 14px;}
+        button.stop-btn { background-color: var(--danger-color); color: white; flex: 2; padding: 8px; font-size: 14px;}
+        button.reset-btn { background-color: var(--reset-color); color: white; flex: 1; padding: 8px; font-size: 14px;}
 
         #statusText {
             font-size: 12px;
             color: #cbd5e1;
             text-align: center;
             width: 100%;
-            margin-top: -4px;
+            margin-top: -2px;
         }
 
         /* ================= KHU VỰC HIỂN THỊ TRUNG TÂM ================= */
@@ -249,6 +273,15 @@
 
         /* ================= RESPONSIVE ĐIỆN THOẠI (Mobile Layout) ================= */
         @media (max-width: 768px) {
+            .top-toolbar {
+                padding-right: 15px; 
+            }
+            .qr-corner {
+                display: none; /* Ẩn QR trên màn hình điện thoại nhỏ để tiết kiệm không gian */
+            }
+            .tool-row {
+                padding-right: 0;
+            }
             .main-display {
                 flex-direction: column; 
                 gap: 12px;
@@ -285,6 +318,12 @@
 
     <!-- BẢNG ĐIỀU KHIỂN -->
     <div class="top-toolbar">
+        <!-- Khung QR code tự động ở góc trên bên phải -->
+        <div class="qr-corner">
+            <div id="qrcode"></div>
+            <span>Quét App</span>
+        </div>
+
         <div class="tool-row">
             <button id="micBtn">1. Cấp quyền Micro</button>
             <select id="micSelect">
@@ -332,6 +371,22 @@
     </div>
 
 <script>
+    // Tự động tạo mã QR dựa theo link hiện tại của trang web
+    window.addEventListener('load', () => {
+        const qrContainer = document.getElementById("qrcode");
+        if (qrContainer && typeof QRCode !== 'undefined') {
+            new QRCode(qrContainer, {
+                text: window.location.href,
+                width: 64,
+                height: 64,
+                colorDark : "#0f172a",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.M
+            });
+        }
+        drawEmptyGraph();
+    });
+
     let audioCtx = null;
     let analyser = null;
     let microphone = null;
@@ -370,7 +425,6 @@
     const canvas = document.getElementById('waveformCanvas');
     const canvasCtx = canvas.getContext('2d');
 
-    window.onload = drawEmptyGraph;
     window.onresize = () => { if(!isMeasuring) drawEmptyGraph(); };
 
     micBtn.addEventListener('click', async () => {
