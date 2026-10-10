@@ -249,7 +249,7 @@
         
         <!-- BẢNG GHI NHẬN TỰ ĐỘNG GÓC TRÁI -->
         <div class="history-panel">
-            <h3>Chu kỳ (3s/Lần)</h3>
+            <h3>Chu kỳ (5s/Lần)</h3>
             <ul class="history-list" id="historyList">
                 <!-- Dữ liệu sẽ tự động điền vào đây -->
             </ul>
@@ -281,7 +281,7 @@
     // Ngưỡng âm thanh
     const THRESHOLD = 85; 
 
-    // Biến cho bảng ghi nhận tự động (3s / lần)
+    // Biến cho bảng ghi nhận tự động (5s / lần, tối đa 3 lần)
     let autoLogInterval = null;
     let logCount = 0;
     let windowSumDb = 0;
@@ -396,11 +396,11 @@
                 statusText.innerText = "Đang đo đạc và ghi nhận tự động...";
 
                 // Khởi động lại bộ ghi (Logger) nếu chưa chạy
-                if (logCount === 0 || logCount >= 10) {
+                if (logCount === 0 || logCount >= 3) {
                     startAutoLogger();
                 } else {
                     // Nếu đang đo dở dang mà dừng rồi bấm chạy lại thì nối tiếp
-                    autoLogInterval = setInterval(logDataTick, 3000);
+                    autoLogInterval = setInterval(logDataTick, 5000);
                 }
                 
                 visualize();
@@ -412,11 +412,12 @@
         }
     });
 
-    // Hàm tick 3 giây của bộ tự động ghi
+    // Hàm tick 5 giây của bộ tự động ghi
     function logDataTick() {
         if (!isMeasuring) return;
 
-        if (logCount >= 10) {
+        // Xóa bảng nếu đã đạt 3 lần đo
+        if (logCount >= 3) {
             logCount = 0;
             historyList.innerHTML = '';
         }
@@ -439,7 +440,7 @@
         historyList.innerHTML = ''; 
         
         if (autoLogInterval) clearInterval(autoLogInterval);
-        autoLogInterval = setInterval(logDataTick, 3000);
+        autoLogInterval = setInterval(logDataTick, 5000);
     }
 
     function stopMeasurement() {
