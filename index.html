@@ -309,7 +309,7 @@
     <div class="main-display">
         <!-- BẢNG GHI NHẬN TỰ ĐỘNG -->
         <div class="history-panel">
-            <h3>Bảng Số Liệu (4 Mẫu x 2s)</h3>
+            <h3>Bảng Số Liệu</h3>
             <ul class="history-list" id="historyList">
                 <!-- Dữ liệu sẽ tự động điền vào đây -->
             </ul>
@@ -345,7 +345,6 @@
 
     const GRAPH_MAX_DB = 310; 
 
-    // Biến cho bảng ghi nhận tự động (Lấy 4 mẫu, mỗi mẫu 2 giây)
     let autoLogInterval = null;
     let logCount = 0;
     let windowSumDb = 0;
@@ -457,7 +456,7 @@
                 measureBtn.innerText = "Dừng đo";
                 measureBtn.className = "stop-btn";
                 micSelect.disabled = true; 
-                statusText.innerText = "Đang đo (2s/mẫu)... Đủ 4 mẫu, lần thứ 5 sẽ khóa lên khung chính trong 5 giây.";
+                statusText.innerText = "Đang đo...";
 
                 if (logCount >= 4) {
                     logCount = 0;
@@ -482,7 +481,7 @@
         let avgDb = windowCountFrames > 0 ? (windowSumDb / windowCountFrames) : 0;
         let formattedAvg = avgDb.toFixed(2);
 
-        // Nếu chưa đủ 4 mẫu thì ghi vào bảng
+        // Ghi nhận 4 mẫu đầu tiên vào bảng (Trạng thái: Đang đo...)
         if (logCount < 4) {
             logCount++;
             const li = document.createElement('li');
@@ -492,17 +491,12 @@
             windowSumDb = 0;
             windowCountFrames = 0;
 
-            if (logCount < 4) {
-                statusText.innerText = `Đang đo... (Mẫu ${logCount}/4)`;
-            } else {
-                statusText.innerText = `Đã đủ 4 mẫu. Đang chuẩn bị lấy mẫu thứ 5 để hiển thị...`;
-            }
+            statusText.innerText = "Đang đo...";
         } 
-        // Khi đã có 4 mẫu trong bảng, lần chạy tick tiếp theo chính là Mẫu thứ 5
+        // Đến mẫu thứ 5: Ngừng đo, khóa chặt giá trị lên màn hình chính và tạm dừng 5 giây
         else {
             isPausedForReview = true;
             
-            // Khóa giá trị lần thứ 5 lên khung chính to để quan sát và ghi chép
             dbDisplay.innerText = formattedAvg;
             if (avgDb > 130 || avgDb < 30) {
                 dbReadout.style.color = 'var(--danger-color)'; 
@@ -514,15 +508,15 @@
                 dbBox.style.boxShadow = '0 0 40px rgba(34, 197, 94, 0.15)';
             }
 
-            statusText.innerText = `Kết quả Lần 5: ${formattedAvg} dB. Đang giữ màn hình để ghi chép (5 giây)...`;
+            statusText.innerText = `Ngừng đo... Kết quả mẫu 5: ${formattedAvg} dB (Tạm dừng 5 giây để ghi chép)`;
             
             setTimeout(() => {
                 if (!isMeasuring) return;
-                historyList.innerHTML = ''; // Xóa sạch 4 mẫu trên bảng sau khi hết 5 giây
-                logCount = 0;               // Reset bộ đếm về 0 để đo đợt mới
-                isPausedForReview = false;  // Tiếp tục đo đợt mới
-                statusText.innerText = "Đang đo đợt tiếp theo...";
-            }, 5000); // 5 giây nghỉ nhìn số liệu
+                historyList.innerHTML = ''; // Xóa sạch 4 mẫu trên bảng sau 5 giây
+                logCount = 0;               // Reset bộ đếm về 0
+                isPausedForReview = false;  // Tiếp tục vòng đo mới
+                statusText.innerText = "Đang đo...";
+            }, 5000); // 5 giây nghỉ
         }
     }
 
