@@ -133,7 +133,7 @@
             margin-top: -2px;
         }
 
-        /* ================= KHU VỰC HIỂN THỊ TRUNG TÂM ================= */
+        /* ================= KHU VỰC HIỂN TRUNG TÂM ================= */
         .main-display {
             flex: 1; 
             display: flex;
@@ -427,6 +427,7 @@
 
     window.onresize = () => { if(!isMeasuring) drawEmptyGraph(); };
 
+    // 1. Cấp quyền & Chọn Micro
     micBtn.addEventListener('click', async () => {
         try {
             let tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -460,6 +461,7 @@
         }
     });
 
+    // 2. Chức năng khuếch đại (Gain)
     gainRange.addEventListener('input', (e) => {
         if (gainNode) gainNode.gain.value = parseFloat(e.target.value);
     });
@@ -471,7 +473,7 @@
         }
     });
 
-    // 2. Bắt đầu đo
+    // 3. Bắt đầu đo
     measureBtn.addEventListener('click', async () => {
         if (!isMeasuring) {
             try {
@@ -529,6 +531,7 @@
         }
     });
 
+    // Hàm đếm và ghi số liệu tự động
     function logDataTick() {
         if (!isMeasuring || isPausedForReview) return;
 
@@ -595,7 +598,7 @@
         micSelect.disabled = false;
     }
 
-    // 3. Nút RESET
+    // Nút RESET
     resetBtn.addEventListener('click', () => {
         if (isMeasuring) stopMeasurement();
         
@@ -632,7 +635,7 @@
     });
 
     function updateUI(db) {
-        if (isPausedForReview) return;
+        if (isPausedForReview) return; // Nếu đang khóa màn hình 5 giây thì không cập nhật số
 
         let formattedDb = db.toFixed(2);
         dbDisplay.innerText = formattedDb;
