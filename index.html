@@ -301,7 +301,7 @@
 
     const GRAPH_MAX_DB = 310; 
 
-    // Các biến phục vụ đo lường 2.4s và giới hạn 20s
+    // Các biến phục vụ đo lường 0.1s và giới hạn 10s
     let autoLogInterval = null;
     let measureTimer = null;
     let currentRmsDb = 0; 
@@ -412,7 +412,7 @@
                 measureBtn.innerText = "Dừng đo";
                 measureBtn.className = "stop-btn";
                 micSelect.disabled = true; 
-                statusText.innerText = "Đang đo liên tục (Tối đa 20s)...";
+                statusText.innerText = "Đang đo liên tục (Tối đa 10s)...";
 
                 dbHistory = [];
                 windowSumDb = 0;
@@ -420,13 +420,13 @@
                 
                 startAutoLogger();
                 
-                // Tự động dừng đo sau 20 giây
+                // Tự động dừng đo sau 10 giây
                 measureTimer = setTimeout(() => {
                     if (isMeasuring) {
                         stopMeasurement();
-                        statusText.innerText = "Đã hoàn thành lượt đo 20 giây (Tự động dừng).";
+                        statusText.innerText = "Đã hoàn thành lượt đo 10 giây (Tự động dừng).";
                     }
-                }, 20000);
+                }, 10000);
 
                 visualize();
             } catch (err) {
@@ -438,7 +438,7 @@
         }
     });
 
-    // Cập nhật lấy mẫu cột 2.4s một lần
+    // Cập nhật lấy mẫu cột 0.1s (100ms) một lần
     function logDataTick() {
         if (!isMeasuring) return;
 
@@ -452,7 +452,7 @@
 
     function startAutoLogger() {
         if (autoLogInterval) clearInterval(autoLogInterval);
-        autoLogInterval = setInterval(logDataTick, 2400); // 2.4 giây/mẫu
+        autoLogInterval = setInterval(logDataTick, 100); // 0.1 giây/mẫu
     }
 
     function stopMeasurement() {
@@ -567,9 +567,11 @@
             let maxDb = Math.max(...dbHistory);
             let minDb = Math.min(...dbHistory);
             
-            let totalSlots = 10; // Chuẩn bị sẵn không gian cho 10 cột (~24s)
-            let gap = 12;
-            let barWidth = Math.max(15, (canvas.width - 80 - (totalSlots * gap)) / totalSlots);
+            // Tự động tính toán bề rộng cột để chứa vừa 100 mẫu thu được trong 10 giây
+            let totalSlots = 100; 
+            let availableWidth = canvas.width - 80;
+            let barWidth = Math.max(2, availableWidth / totalSlots - 1);
+            let gap = (availableWidth - (totalSlots * barWidth)) / totalSlots;
 
             for (let i = 0; i < dbHistory.length; i++) {
                 let val = dbHistory[i];
@@ -588,13 +590,6 @@
 
                 // Vẽ cột
                 canvasCtx.fillRect(x, y, barWidth, barHeight);
-
-                // Hiển thị số đo dB phía trên đỉnh mỗi cột
-                canvasCtx.fillStyle = '#f8fafc';
-                canvasCtx.font = '10px monospace';
-                let label = val.toFixed(1);
-                let labelWidth = canvasCtx.measureText(label).width;
-                canvasCtx.fillText(label, x + (barWidth - labelWidth) / 2, Math.max(12, y - 4));
             }
         }
     }
