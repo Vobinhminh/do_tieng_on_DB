@@ -222,7 +222,7 @@
     // ĐIỀU CHỈNH GIỚI HẠN dB VỀ 120 dB
     const GRAPH_MAX_DB = 120; 
 
-    // Các biến phục vụ đo lường 0.01s (10ms) và giới hạn 10s
+    // Các biến phục vụ đo lường 0.02s (20ms) và giới hạn 10s (500 mẫu)
     let autoLogInterval = null;
     let measureTimer = null;
     let currentRmsDb = 0; 
@@ -335,7 +335,7 @@
                 measureBtn.innerText = "Dừng đo";
                 measureBtn.className = "stop-btn";
                 micSelect.disabled = true; 
-                statusText.innerText = "Đang đo liên tục 0.01s/lần (Tối đa 10s)...";
+                statusText.innerText = "Đang đo liên tục 0.02s/lần (Tối đa 10s)...";
 
                 dbHistory = [];
                 windowSumDb = 0;
@@ -361,7 +361,7 @@
         }
     });
 
-    // Cập nhật lấy mẫu cột 0.01s (10ms) một lần
+    // Cập nhật lấy mẫu cột 0.02s (20ms) một lần
     function logDataTick() {
         if (!isMeasuring) return;
 
@@ -375,7 +375,7 @@
 
     function startAutoLogger() {
         if (autoLogInterval) clearInterval(autoLogInterval);
-        autoLogInterval = setInterval(logDataTick, 10); // 0.01 giây (10ms)/mẫu
+        autoLogInterval = setInterval(logDataTick, 20); // 0.02 giây (20ms)/mẫu
     }
 
     function stopMeasurement() {
@@ -504,9 +504,9 @@
             let maxDb = Math.max(...dbHistory);
             let minDb = Math.min(...dbHistory);
             
-            let totalSlots = 1000; 
+            let totalSlots = 500; // 500 mẫu trong 10 giây (0.02s/mẫu)
             let availableWidth = canvas.width - 80;
-            let barWidth = Math.max(0.8, availableWidth / totalSlots);
+            let barWidth = Math.max(1, availableWidth / totalSlots);
 
             for (let i = 0; i < dbHistory.length; i++) {
                 let val = dbHistory[i];
@@ -535,7 +535,7 @@
             // HIỂN THỊ GIÁ TRỊ THỜI GIAN VÀ CƯỜNG ĐỘ ÂM Ở TRÊN ĐỈNH CỘT ĐƯỢC CHỌN
             if (selectedBarIndex >= 0 && selectedBarIndex < dbHistory.length) {
                 let val = dbHistory[selectedBarIndex];
-                let timeSec = (selectedBarIndex * 0.01).toFixed(2);
+                let timeSec = (selectedBarIndex * 0.02).toFixed(2);
                 let barHeight = (val / GRAPH_MAX_DB) * canvas.height;
                 let x = 60 + selectedBarIndex * barWidth;
                 let y = canvas.height - barHeight;
