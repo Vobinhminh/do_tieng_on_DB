@@ -134,7 +134,7 @@
             margin-top: -2px;
         }
 
-        /* ================= KHU VỰC HIỂN TRUNG TÂM ================= */
+        /* ================= KHU VỰC HIỂN THỊ TRUNG TÂM ================= */
         .main-display {
             flex: 1; 
             display: flex;
@@ -301,13 +301,14 @@
 
     const GRAPH_MAX_DB = 310; 
 
-    // Các biến phục vụ đo lường 0.1s và giới hạn 10s
+    // Các biến phục vụ đo lường 0.01s (10ms) và giới hạn 10s
     let autoLogInterval = null;
     let measureTimer = null;
     let currentRmsDb = 0; 
     let windowSumDb = 0;
     let windowCountFrames = 0;
     let dbHistory = []; 
+    let selectedBarIndex = -1; // Cột đang được chọn để xem số liệu
 
     const micBtn = document.getElementById('micBtn');
     const measureBtn = document.getElementById('measureBtn');
@@ -409,10 +410,11 @@
                 gainNode.connect(analyser);
 
                 isMeasuring = true;
+                selectedBarIndex = -1; // Reset lựa chọn cột
                 measureBtn.innerText = "Dừng đo";
                 measureBtn.className = "stop-btn";
                 micSelect.disabled = true; 
-                statusText.innerText = "Đang đo liên tục (Tối đa 10s)...";
+                statusText.innerText = "Đang đo liên tục 0.01s/lần (Tối đa 10s)...";
 
                 dbHistory = [];
                 windowSumDb = 0;
@@ -424,7 +426,7 @@
                 measureTimer = setTimeout(() => {
                     if (isMeasuring) {
                         stopMeasurement();
-                        statusText.innerText = "Đã hoàn thành lượt đo 10 giây (Tự động dừng).";
+                        statusText.innerText = "Đã hoàn thành lượt đo 10s (Bấm/Chạm vào thanh bất kỳ để xem số liệu).";
                     }
                 }, 10000);
 
@@ -434,11 +436,11 @@
             }
         } else {
             stopMeasurement();
-            statusText.innerText = "Đã tạm dừng thủ công. Bấm Bắt đầu đo để tiếp tục.";
+            statusText.innerText = "Đã tạm dừng thủ công (Bấm/Chạm vào thanh bất kỳ để xem số liệu).";
         }
     });
 
-    // Cập nhật lấy mẫu cột 0.1s (100ms) một lần
+    // Cập nhật lấy mẫu cột 0.01s (10ms) một lần
     function logDataTick() {
         if (!isMeasuring) return;
 
@@ -452,7 +454,7 @@
 
     function startAutoLogger() {
         if (autoLogInterval) clearInterval(autoLogInterval);
-        autoLogInterval = setInterval(logDataTick, 100); // 0.1 giây/mẫu
+        autoLogInterval = setInterval(logDataTick, 10); // 0.01 giây (10ms)/mẫu
     }
 
     function stopMeasurement() {
@@ -467,6 +469,7 @@
         measureBtn.innerText = "Bắt đầu đo";
         measureBtn.className = "start-btn";
         micSelect.disabled = false;
+        drawGraphGrid(); // Vẽ lại để sẵn sàng tương tác xem số liệu
     }
 
     // Nút RESET
@@ -477,6 +480,7 @@
         windowSumDb = 0;
         windowCountFrames = 0;
         dbHistory = [];
+        selectedBarIndex = -1;
 
         dbDisplay.innerText = '0.00'; 
         dbReadout.style.color = 'var(--safe-color)'; 
@@ -517,6 +521,34 @@
             dbBox.style.boxShadow = '0 0 40px rgba(34, 197, 94, 0.15)';
         }
     }
+
+    // Xử lý Sự kiện Chọn Cột khi Chạm/Rê chuột (Hover / Touch / Click)
+    function handleCanvasInteract(clientX) {
+        if (isMeasuring || dbHistory.length === 0) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = clientX - rect.left;
+
+        let totalSlots = 1000; // 1000 mẫu trong 10 giây
+        let startX = 60;
+        let availableWidth = canvas.width - 80;
+
+        if (mouseX >= startX && mouseX <= canvas.width - 20) {
+            let relativeX = mouseX - startX;
+            let index = Math.floor((relativeX / availableWidth) * dbHistory.length);
+            
+            if (index >= 0 && index < dbHistory.length) {
+                selectedBarIndex = index;
+                drawGraphGrid();
+            }
+        }
+    }
+
+    canvas.addEventListener('mousemove', (e) => handleCanvasInteract(e.clientX));
+    canvas.addEventListener('click', (e) => handleCanvasInteract(e.clientX));
+    canvas.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 0) handleCanvasInteract(e.touches[0].clientX);
+    });
 
     // Thuật toán vẽ Đồ thị Cột Năng Lượng (Bar Chart)
     function drawGraphGrid() {
@@ -567,16 +599,15 @@
             let maxDb = Math.max(...dbHistory);
             let minDb = Math.min(...dbHistory);
             
-            // Tự động tính toán bề rộng cột để chứa vừa 100 mẫu thu được trong 10 giây
-            let totalSlots = 100; 
+            // Tính toán bề rộng cột cho 1000 mẫu thu được trong 10 giây (0.01s/mẫu)
+            let totalSlots = 1000; 
             let availableWidth = canvas.width - 80;
-            let barWidth = Math.max(2, availableWidth / totalSlots - 1);
-            let gap = (availableWidth - (totalSlots * barWidth)) / totalSlots;
+            let barWidth = Math.max(0.8, availableWidth / totalSlots);
 
             for (let i = 0; i < dbHistory.length; i++) {
                 let val = dbHistory[i];
                 let barHeight = (val / GRAPH_MAX_DB) * canvas.height;
-                let x = 60 + i * (barWidth + gap);
+                let x = 60 + i * barWidth;
                 let y = canvas.height - barHeight;
 
                 // Quy tắc tô màu: Max = Đỏ, Min = Xám, Còn lại = Xanh lá
@@ -588,8 +619,48 @@
                     canvasCtx.fillStyle = '#22c55e'; // Xanh lá (Tiêu chuẩn)
                 }
 
+                // Nếu cột này đang được chọn -> Đổi sang màu vàng sáng rực để làm nổi bật
+                if (i === selectedBarIndex) {
+                    canvasCtx.fillStyle = '#facc15';
+                }
+
                 // Vẽ cột
-                canvasCtx.fillRect(x, y, barWidth, barHeight);
+                canvasCtx.fillRect(x, y, Math.max(1, barWidth), barHeight);
+            }
+
+            // HIỂN THỊ GIÁ TRỊ THỜI GIAN VÀ CƯỜNG ĐỘ ÂM Ở TRÊN ĐỈNH CỘT ĐƯỢC CHỌN
+            if (selectedBarIndex >= 0 && selectedBarIndex < dbHistory.length) {
+                let val = dbHistory[selectedBarIndex];
+                let timeSec = (selectedBarIndex * 0.01).toFixed(2);
+                let barHeight = (val / GRAPH_MAX_DB) * canvas.height;
+                let x = 60 + selectedBarIndex * barWidth;
+                let y = canvas.height - barHeight;
+
+                // Đường dóng dọc đánh dấu vị trí chọn
+                canvasCtx.beginPath();
+                canvasCtx.strokeStyle = 'rgba(250, 204, 21, 0.8)';
+                canvasCtx.setLineDash([2, 2]);
+                canvasCtx.moveTo(x, 0);
+                canvasCtx.lineTo(x, canvas.height);
+                canvasCtx.stroke();
+                canvasCtx.setLineDash([]);
+
+                // Vẽ hộp thoại tooltip chứa thông số
+                let text = `t: ${timeSec}s | ${val.toFixed(2)} dB`;
+                canvasCtx.font = 'bold 12px monospace';
+                let textW = canvasCtx.measureText(text).width;
+                
+                let boxX = Math.min(Math.max(10, x - textW / 2), canvas.width - textW - 20);
+                let boxY = Math.max(25, y - 10);
+
+                canvasCtx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+                canvasCtx.fillRect(boxX - 5, boxY - 14, textW + 10, 18);
+                canvasCtx.strokeStyle = '#facc15';
+                canvasCtx.lineWidth = 1;
+                canvasCtx.strokeRect(boxX - 5, boxY - 14, textW + 10, 18);
+
+                canvasCtx.fillStyle = '#facc15';
+                canvasCtx.fillText(text, boxX, boxY);
             }
         }
     }
