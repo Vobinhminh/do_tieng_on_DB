@@ -134,85 +134,20 @@
             margin-top: -2px;
         }
 
-        /* ================= KHU VỰC HIỂN THỊ TRUNG TÂM ================= */
-        .main-display {
-            flex: 1; 
-            display: flex;
-            flex-direction: row; 
-            padding: 15px;
-            gap: 20px;
-            min-height: 0; 
-            box-sizing: border-box;
-        }
-
-        /* KHUNG CHỮ NHẬT LẤP ĐẦY KHÔNG GIAN */
-        .db-container {
-            flex: 1; 
-            height: 100%;
-            min-width: 0; 
-            min-height: 0; 
-            display: flex;
-            align-items: stretch;
-            justify-content: stretch;
-            padding: 0px; 
-        }
-
-        .db-box {
-            flex: 1; 
-            container-type: size; 
-            background: rgba(15, 23, 42, 0.5);
-            border: 8px solid var(--safe-color); 
-            border-radius: 30px; 
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 40px rgba(34, 197, 94, 0.15);
-            transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
-            box-sizing: border-box;
-            padding: 5px; 
-        }
-
-        .db-readout {
-            display: flex;
-            align-items: baseline; 
-            justify-content: center;
-            gap: 1.5cqw; 
-            width: 100%;
-            color: var(--safe-color); 
-            transition: color 0.15s ease-out;
-        }
-
-        .db-value {
-            font-size: min(19cqw, 65cqh); 
-            font-weight: 900;
-            color: inherit; 
-            line-height: 1;
-            font-family: 'Times New Roman', Times, serif; 
-            font-variant-numeric: tabular-nums; 
-        }
-
-        .db-unit {
-            font-size: min(19cqw, 65cqh); 
-            font-weight: 900;
-            color: inherit; 
-            font-family: 'Times New Roman', Times, serif; 
-        }
-
-        /* ĐỒ THỊ BIỂU ĐỒ (dB vs Thời gian) */
+        /* ================= KHU VỰC ĐỒ THỊ TOÀN MÀN HÌNH ================= */
         .canvas-container {
+            flex: 1;
             width: 100%;
-            height: 200px; 
             background: rgba(15, 23, 42, 0.9);
-            border-top: 1px solid var(--border-color);
-            flex-shrink: 0; 
             position: relative;
+            min-height: 0;
         }
 
         canvas {
             width: 100%;
             height: 100%;
             display: block;
+            touch-action: none; /* Tránh xung đột cuộn màn hình trên thiết bị cảm ứng */
         }
 
         /* RESPONSIVE ĐIỆN THOẠI */
@@ -220,9 +155,6 @@
             .top-toolbar { padding-right: 15px; }
             .qr-corner { display: none; }
             .tool-row { padding-right: 0; }
-            .main-display { padding: 10px; }
-            .db-box { border-width: 6px; border-radius: 20px; }
-            .canvas-container { height: 150px; }
         }
     </style>
 </head>
@@ -255,19 +187,7 @@
         <div id="statusText">Vui lòng Cấp quyền Micro để bắt đầu.</div>
     </div>
 
-    <!-- GIAO DIỆN HIỂN THỊ CHÍNH -->
-    <div class="main-display">
-        <div class="db-container">
-            <div id="dbBox" class="db-box">
-                <div id="dbReadout" class="db-readout">
-                    <div id="dbDisplay" class="db-value">0.00</div>
-                    <div class="db-unit">dB</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ĐỒ THỊ CỘT NĂNG LƯỢNG -->
+    <!-- ĐỒ THỊ CỘT NĂNG LƯỢNG PHÓNG TO TOÀN BỘ KHÔNG GIAN BÊN DƯỚI -->
     <div class="canvas-container" id="canvasContainer">
         <canvas id="waveformCanvas"></canvas>
     </div>
@@ -315,10 +235,6 @@
     const resetBtn = document.getElementById('resetBtn');
     const calibrateBtn = document.getElementById('calibrateBtn');
     
-    const dbReadout = document.getElementById('dbReadout');
-    const dbDisplay = document.getElementById('dbDisplay');
-    const dbBox = document.getElementById('dbBox'); 
-    
     const gainRange = document.getElementById('gainRange');
     const filterToggle = document.getElementById('filterToggle');
     const statusText = document.getElementById('statusText');
@@ -327,7 +243,11 @@
     const canvas = document.getElementById('waveformCanvas');
     const canvasCtx = canvas.getContext('2d');
 
-    window.onresize = () => { if(!isMeasuring) drawEmptyGraph(); };
+    window.onresize = () => { 
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        drawGraphGrid(); 
+    };
 
     // 1. Cấp quyền & Chọn Micro
     micBtn.addEventListener('click', async () => {
@@ -469,7 +389,7 @@
         measureBtn.innerText = "Bắt đầu đo";
         measureBtn.className = "start-btn";
         micSelect.disabled = false;
-        drawGraphGrid(); // Vẽ lại để sẵn sàng tương tác xem số liệu
+        drawGraphGrid(); 
     }
 
     // Nút RESET
@@ -482,11 +402,6 @@
         dbHistory = [];
         selectedBarIndex = -1;
 
-        dbDisplay.innerText = '0.00'; 
-        dbReadout.style.color = 'var(--safe-color)'; 
-        dbBox.style.borderColor = 'var(--safe-color)';
-        dbBox.style.boxShadow = '0 0 40px rgba(34, 197, 94, 0.15)';
-        
         gainRange.value = 1;
         document.getElementById('filterToggle').checked = true;
 
@@ -507,21 +422,6 @@
         }
     });
 
-    function updateUI(db) {
-        let formattedDb = db.toFixed(2);
-        dbDisplay.innerText = formattedDb;
-        
-        if (db > 130 || db < 30) {
-            dbReadout.style.color = 'var(--danger-color)'; 
-            dbBox.style.borderColor = 'var(--danger-color)';
-            dbBox.style.boxShadow = '0 0 50px rgba(239, 68, 68, 0.3)';
-        } else {
-            dbReadout.style.color = 'var(--safe-color)'; 
-            dbBox.style.borderColor = 'var(--safe-color)';
-            dbBox.style.boxShadow = '0 0 40px rgba(34, 197, 94, 0.15)';
-        }
-    }
-
     // Xử lý Sự kiện Chọn Cột khi Chạm/Rê chuột (Hover / Touch / Click)
     function handleCanvasInteract(clientX) {
         if (isMeasuring || dbHistory.length === 0) return;
@@ -529,7 +429,6 @@
         const rect = canvas.getBoundingClientRect();
         const mouseX = clientX - rect.left;
 
-        let totalSlots = 1000; // 1000 mẫu trong 10 giây
         let startX = 60;
         let availableWidth = canvas.width - 80;
 
@@ -549,6 +448,9 @@
     canvas.addEventListener('touchstart', (e) => {
         if (e.touches.length > 0) handleCanvasInteract(e.touches[0].clientX);
     });
+    canvas.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 0) handleCanvasInteract(e.touches[0].clientX);
+    });
 
     // Thuật toán vẽ Đồ thị Cột Năng Lượng (Bar Chart)
     function drawGraphGrid() {
@@ -556,7 +458,7 @@
         canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
 
         canvasCtx.lineWidth = 1;
-        canvasCtx.font = '11px sans-serif';
+        canvasCtx.font = '12px sans-serif';
 
         let y130 = canvas.height - (130 / GRAPH_MAX_DB) * canvas.height;
         let y30 = canvas.height - (30 / GRAPH_MAX_DB) * canvas.height;
@@ -586,20 +488,19 @@
         canvasCtx.stroke();
 
         canvasCtx.fillStyle = '#94a3b8';
-        canvasCtx.fillText(GRAPH_MAX_DB + " dB", 5, 15);
+        canvasCtx.fillText(GRAPH_MAX_DB + " dB", 5, 18);
         canvasCtx.fillText("130 dB", 5, y130 - 5);
         canvasCtx.fillText("30 dB", 5, y30 - 5);
         canvasCtx.fillText("0 dB", 5, canvas.height - 5);
         
         let textWidth = canvasCtx.measureText("Thời gian (s) ➔").width;
-        canvasCtx.fillText("Thời gian (s) ➔", canvas.width - textWidth - 10, canvas.height - 5);
+        canvasCtx.fillText("Thời gian (s) ➔", canvas.width - textWidth - 10, canvas.height - 8);
 
         // VẼ CÁC CỘT CƯỜNG ĐỘ ÂM
         if (dbHistory.length > 0) {
             let maxDb = Math.max(...dbHistory);
             let minDb = Math.min(...dbHistory);
             
-            // Tính toán bề rộng cột cho 1000 mẫu thu được trong 10 giây (0.01s/mẫu)
             let totalSlots = 1000; 
             let availableWidth = canvas.width - 80;
             let barWidth = Math.max(0.8, availableWidth / totalSlots);
@@ -619,7 +520,7 @@
                     canvasCtx.fillStyle = '#22c55e'; // Xanh lá (Tiêu chuẩn)
                 }
 
-                // Nếu cột này đang được chọn -> Đổi sang màu vàng sáng rực để làm nổi bật
+                // Nếu cột này đang được chọn -> Đổi sang màu vàng sáng rực
                 if (i === selectedBarIndex) {
                     canvasCtx.fillStyle = '#facc15';
                 }
@@ -639,25 +540,25 @@
                 // Đường dóng dọc đánh dấu vị trí chọn
                 canvasCtx.beginPath();
                 canvasCtx.strokeStyle = 'rgba(250, 204, 21, 0.8)';
-                canvasCtx.setLineDash([2, 2]);
+                canvasCtx.setLineDash([3, 3]);
                 canvasCtx.moveTo(x, 0);
                 canvasCtx.lineTo(x, canvas.height);
                 canvasCtx.stroke();
                 canvasCtx.setLineDash([]);
 
-                // Vẽ hộp thoại tooltip chứa thông số
-                let text = `t: ${timeSec}s | ${val.toFixed(2)} dB`;
-                canvasCtx.font = 'bold 12px monospace';
+                // Hộp thoại Tooltip hiển thị thông số mức cường độ âm
+                let text = `t: ${timeSec}s | L = ${val.toFixed(2)} dB`;
+                canvasCtx.font = 'bold 13px monospace';
                 let textW = canvasCtx.measureText(text).width;
                 
                 let boxX = Math.min(Math.max(10, x - textW / 2), canvas.width - textW - 20);
-                let boxY = Math.max(25, y - 10);
+                let boxY = Math.max(30, y - 12);
 
                 canvasCtx.fillStyle = 'rgba(15, 23, 42, 0.95)';
-                canvasCtx.fillRect(boxX - 5, boxY - 14, textW + 10, 18);
+                canvasCtx.fillRect(boxX - 6, boxY - 16, textW + 12, 22);
                 canvasCtx.strokeStyle = '#facc15';
-                canvasCtx.lineWidth = 1;
-                canvasCtx.strokeRect(boxX - 5, boxY - 14, textW + 10, 18);
+                canvasCtx.lineWidth = 1.5;
+                canvasCtx.strokeRect(boxX - 6, boxY - 16, textW + 12, 22);
 
                 canvasCtx.fillStyle = '#facc15';
                 canvasCtx.fillText(text, boxX, boxY);
@@ -696,7 +597,6 @@
             if (db > GRAPH_MAX_DB) db = GRAPH_MAX_DB;
             
             currentRmsDb = db;
-            updateUI(db);
 
             windowSumDb += db;
             windowCountFrames++;
