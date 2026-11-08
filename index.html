@@ -147,7 +147,7 @@
             width: 100%;
             height: 100%;
             display: block;
-            touch-action: none; /* Tránh xung đột cuộn màn hình trên thiết bị cảm ứng */
+            touch-action: none;
         }
 
         /* RESPONSIVE ĐIỆN THOẠI */
@@ -219,7 +219,8 @@
     let animationId = null;
     let noiseFloorOffset = 0;
 
-    const GRAPH_MAX_DB = 310; 
+    // ĐIỀU CHỈNH GIỚI HẠN dB VỀ 120 dB
+    const GRAPH_MAX_DB = 120; 
 
     // Các biến phục vụ đo lường 0.01s (10ms) và giới hạn 10s
     let autoLogInterval = null;
@@ -452,48 +453,50 @@
         if (e.touches.length > 0) handleCanvasInteract(e.touches[0].clientX);
     });
 
-    // Thuật toán vẽ Đồ thị Cột Năng Lượng (Bar Chart)
+    // Thuật toán vẽ Đồ thị Cột Năng Lượng (Bar Chart) - CHIA 8 Ô TRỤC dB
     function drawGraphGrid() {
         canvasCtx.fillStyle = '#0f172a';
         canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
 
         canvasCtx.lineWidth = 1;
-        canvasCtx.font = '12px sans-serif';
+        canvasCtx.font = '11px sans-serif';
 
-        let y130 = canvas.height - (130 / GRAPH_MAX_DB) * canvas.height;
-        let y30 = canvas.height - (30 / GRAPH_MAX_DB) * canvas.height;
+        // CHIA TRỤC 120 dB THÀNH 8 Ô BẰNG NHAU (MỖI Ô 15 dB)
+        const numDivisions = 8;
+        const stepDb = GRAPH_MAX_DB / numDivisions; // 120 / 8 = 15 dB
 
-        // Vạch giới hạn 130 dB và 30 dB
-        canvasCtx.beginPath();
-        canvasCtx.setLineDash([5, 5]);
-        canvasCtx.moveTo(0, y130);
-        canvasCtx.lineTo(canvas.width, y130);
-        canvasCtx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
-        canvasCtx.stroke();
+        for (let i = 0; i <= numDivisions; i++) {
+            let currentDb = i * stepDb;
+            let y = canvas.height - (currentDb / GRAPH_MAX_DB) * canvas.height;
 
-        canvasCtx.beginPath();
-        canvasCtx.moveTo(0, y30);
-        canvasCtx.lineTo(canvas.width, y30);
-        canvasCtx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
-        canvasCtx.stroke();
+            // Nhãn số dB
+            canvasCtx.fillStyle = '#94a3b8';
+            canvasCtx.fillText(currentDb + " dB", 5, i === numDivisions ? y + 12 : y - 4);
+
+            // Đường vạch đứt cho các ô (riêng 0 dB vẽ vạch liền)
+            canvasCtx.beginPath();
+            if (currentDb === 0) {
+                canvasCtx.setLineDash([]);
+                canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            } else {
+                canvasCtx.setLineDash([4, 4]);
+                canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            }
+            canvasCtx.moveTo(50, y);
+            canvasCtx.lineTo(canvas.width, y);
+            canvasCtx.stroke();
+        }
         canvasCtx.setLineDash([]);
 
-        // Khung viền đồ thị
-        canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        // Trục dọc phân cách
+        canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
         canvasCtx.beginPath();
-        canvasCtx.moveTo(0, canvas.height - 1);
-        canvasCtx.lineTo(canvas.width, canvas.height - 1);
-        canvasCtx.moveTo(1, 0);
-        canvasCtx.lineTo(1, canvas.height);
+        canvasCtx.moveTo(55, 0);
+        canvasCtx.lineTo(55, canvas.height);
         canvasCtx.stroke();
-
-        canvasCtx.fillStyle = '#94a3b8';
-        canvasCtx.fillText(GRAPH_MAX_DB + " dB", 5, 18);
-        canvasCtx.fillText("130 dB", 5, y130 - 5);
-        canvasCtx.fillText("30 dB", 5, y30 - 5);
-        canvasCtx.fillText("0 dB", 5, canvas.height - 5);
         
         let textWidth = canvasCtx.measureText("Thời gian (s) ➔").width;
+        canvasCtx.fillStyle = '#94a3b8';
         canvasCtx.fillText("Thời gian (s) ➔", canvas.width - textWidth - 10, canvas.height - 8);
 
         // VẼ CÁC CỘT CƯỜNG ĐỘ ÂM
