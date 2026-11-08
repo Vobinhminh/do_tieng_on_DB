@@ -67,7 +67,7 @@
             top: 10px;
             right: 15px;
             background: white;
-            padding: 4px;
+            padding: 4px 6px;
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             display: flex;
@@ -79,6 +79,7 @@
             color: #0f172a;
             font-weight: bold;
             margin-top: 2px;
+            white-space: nowrap;
         }
 
         .tool-row label {
@@ -144,64 +145,7 @@
             box-sizing: border-box;
         }
 
-        /* BẢNG LỊCH SỬ ĐO */
-        .history-panel {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 15px;
-            width: 240px;
-            height: 100%; 
-            z-index: 5;
-            backdrop-filter: blur(4px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
-        }
-
-        .history-panel h3 {
-            font-size: 13px;
-            color: #38bdf8;
-            margin-bottom: 12px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            flex-shrink: 0;
-        }
-
-        .history-list {
-            list-style: none;
-            font-size: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            overflow-y: auto; 
-            flex: 1;
-            padding-right: 5px;
-        }
-
-        .history-list::-webkit-scrollbar { width: 4px; }
-        .history-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
-        .history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-
-        .history-list li {
-            display: flex;
-            justify-content: space-between;
-            color: #e2e8f0;
-            font-family: monospace;
-            font-weight: 600;
-            background: rgba(255,255,255,0.05);
-            padding: 8px 12px;
-            border-radius: 6px;
-        }
-        
-        .history-list li .idx { color: #94a3b8; font-weight: normal; }
-
-        /* ================= KHUNG CHỮ NHẬT LẤP ĐẦY KHÔNG GIAN ================= */
+        /* KHUNG CHỮ NHẬT LẤP ĐẦY KHÔNG GIAN */
         .db-container {
             flex: 1; 
             height: 100%;
@@ -258,7 +202,7 @@
         /* ĐỒ THỊ BIỂU ĐỒ (dB vs Thời gian) */
         .canvas-container {
             width: 100%;
-            height: 180px; 
+            height: 200px; 
             background: rgba(15, 23, 42, 0.9);
             border-top: 1px solid var(--border-color);
             flex-shrink: 0; 
@@ -271,46 +215,14 @@
             display: block;
         }
 
-        /* ================= RESPONSIVE ĐIỆN THOẠI (Mobile Layout) ================= */
+        /* RESPONSIVE ĐIỆN THOẠI */
         @media (max-width: 768px) {
-            .top-toolbar {
-                padding-right: 15px; 
-            }
-            .qr-corner {
-                display: none; /* Ẩn QR trên màn hình điện thoại nhỏ để tiết kiệm không gian */
-            }
-            .tool-row {
-                padding-right: 0;
-            }
-            .main-display {
-                flex-direction: column; 
-                gap: 12px;
-                padding: 10px;
-            }
-            .history-panel {
-                width: 100%;
-                height: auto;
-                max-height: 150px; 
-                padding: 10px;
-            }
-            .history-list {
-                display: grid;
-                grid-template-columns: 1fr 1fr; 
-                gap: 6px;
-            }
-            .history-list li {
-                padding: 6px 8px;
-            }
-            .db-container {
-                padding: 0;
-            }
-            .db-box {
-                border-width: 6px;
-                border-radius: 20px;
-            }
-            .canvas-container {
-                height: 130px; 
-            }
+            .top-toolbar { padding-right: 15px; }
+            .qr-corner { display: none; }
+            .tool-row { padding-right: 0; }
+            .main-display { padding: 10px; }
+            .db-box { border-width: 6px; border-radius: 20px; }
+            .canvas-container { height: 150px; }
         }
     </style>
 </head>
@@ -318,7 +230,6 @@
 
     <!-- BẢNG ĐIỀU KHIỂN -->
     <div class="top-toolbar">
-        <!-- Khung QR code tự động ở góc trên bên phải -->
         <div class="qr-corner">
             <div id="qrcode"></div>
             <span>ĐO MCĐ ÂM</span>
@@ -346,15 +257,6 @@
 
     <!-- GIAO DIỆN HIỂN THỊ CHÍNH -->
     <div class="main-display">
-        <!-- BẢNG GHI NHẬN TỰ ĐỘNG -->
-        <div class="history-panel">
-            <h3>Bảng Số Liệu</h3>
-            <ul class="history-list" id="historyList">
-                <!-- Dữ liệu sẽ tự động điền vào đây -->
-            </ul>
-        </div>
-
-        <!-- KHUNG CHỮ NHẬT LẤP ĐẦY KHÔNG GIAN -->
         <div class="db-container">
             <div id="dbBox" class="db-box">
                 <div id="dbReadout" class="db-readout">
@@ -365,7 +267,7 @@
         </div>
     </div>
 
-    <!-- ĐỒ THỊ BIỂU ĐỒ (dB vs Thời gian) -->
+    <!-- ĐỒ THỊ CỘT NĂNG LƯỢNG -->
     <div class="canvas-container" id="canvasContainer">
         <canvas id="waveformCanvas"></canvas>
     </div>
@@ -394,18 +296,18 @@
     let biquadFilter = null;
     let mediaStream = null;
     let isMeasuring = false;
-    let isPausedForReview = false; 
     let animationId = null;
     let noiseFloorOffset = 0;
 
     const GRAPH_MAX_DB = 310; 
 
+    // Các biến phục vụ đo lường 2.4s và giới hạn 20s
     let autoLogInterval = null;
-    let logCount = 0;
+    let measureTimer = null;
+    let currentRmsDb = 0; 
     let windowSumDb = 0;
     let windowCountFrames = 0;
-
-    let dbHistory = [];
+    let dbHistory = []; 
 
     const micBtn = document.getElementById('micBtn');
     const measureBtn = document.getElementById('measureBtn');
@@ -415,7 +317,6 @@
     const dbReadout = document.getElementById('dbReadout');
     const dbDisplay = document.getElementById('dbDisplay');
     const dbBox = document.getElementById('dbBox'); 
-    const historyList = document.getElementById('historyList');
     
     const gainRange = document.getElementById('gainRange');
     const filterToggle = document.getElementById('filterToggle');
@@ -508,19 +409,25 @@
                 gainNode.connect(analyser);
 
                 isMeasuring = true;
-                isPausedForReview = false;
                 measureBtn.innerText = "Dừng đo";
                 measureBtn.className = "stop-btn";
                 micSelect.disabled = true; 
-                statusText.innerText = "Đang đo...";
+                statusText.innerText = "Đang đo liên tục (Tối đa 20s)...";
 
-                if (logCount >= 4) {
-                    logCount = 0;
-                    historyList.innerHTML = '';
-                    dbHistory = []; 
-                }
+                dbHistory = [];
+                windowSumDb = 0;
+                windowCountFrames = 0;
                 
                 startAutoLogger();
+                
+                // Tự động dừng đo sau 20 giây
+                measureTimer = setTimeout(() => {
+                    if (isMeasuring) {
+                        stopMeasurement();
+                        statusText.innerText = "Đã hoàn thành lượt đo 20 giây (Tự động dừng).";
+                    }
+                }, 20000);
+
                 visualize();
             } catch (err) {
                 alert("Lỗi kết nối Micro: " + err);
@@ -531,57 +438,21 @@
         }
     });
 
-    // Hàm đếm và ghi số liệu tự động
+    // Cập nhật lấy mẫu cột 2.4s một lần
     function logDataTick() {
-        if (!isMeasuring || isPausedForReview) return;
+        if (!isMeasuring) return;
 
-        let avgDb = windowCountFrames > 0 ? (windowSumDb / windowCountFrames) : 0;
-        let formattedAvg = avgDb.toFixed(2);
+        let avgDb = windowCountFrames > 0 ? (windowSumDb / windowCountFrames) : currentRmsDb;
+        dbHistory.push(avgDb);
 
-        // Ghi nhận 4 mẫu đầu tiên vào bảng (Trạng thái: Đang đo...)
-        if (logCount < 4) {
-            logCount++;
-            const li = document.createElement('li');
-            li.innerHTML = `<span class="idx">Lần ${logCount}:</span> <span>${formattedAvg} dB</span>`;
-            historyList.appendChild(li);
-
-            windowSumDb = 0;
-            windowCountFrames = 0;
-
-            statusText.innerText = "Đang đo...";
-        } 
-        // Đến mẫu thứ 5: Ngừng đo, khóa chặt giá trị lên màn hình chính và tạm dừng 5 giây
-        else {
-            isPausedForReview = true;
-            
-            dbDisplay.innerText = formattedAvg;
-            if (avgDb > 130 || avgDb < 30) {
-                dbReadout.style.color = 'var(--danger-color)'; 
-                dbBox.style.borderColor = 'var(--danger-color)';
-                dbBox.style.boxShadow = '0 0 50px rgba(239, 68, 68, 0.3)';
-            } else {
-                dbReadout.style.color = 'var(--safe-color)'; 
-                dbBox.style.borderColor = 'var(--safe-color)';
-                dbBox.style.boxShadow = '0 0 40px rgba(34, 197, 94, 0.15)';
-            }
-
-            statusText.innerText = `Ngừng đo... Kết quả mẫu 5: ${formattedAvg} dB (Tạm dừng 5 giây để ghi chép)`;
-            
-            setTimeout(() => {
-                if (!isMeasuring) return;
-                historyList.innerHTML = ''; // Xóa sạch 4 mẫu trên bảng sau 5 giây
-                logCount = 0;               // Reset bộ đếm về 0
-                isPausedForReview = false;  // Tiếp tục vòng đo mới
-                statusText.innerText = "Đang đo...";
-            }, 5000); // 5 giây nghỉ
-        }
+        windowSumDb = 0;
+        windowCountFrames = 0;
+        drawGraphGrid();
     }
 
     function startAutoLogger() {
-        windowSumDb = 0;
-        windowCountFrames = 0;
         if (autoLogInterval) clearInterval(autoLogInterval);
-        autoLogInterval = setInterval(logDataTick, 2000); // 2 giây mỗi mẫu
+        autoLogInterval = setInterval(logDataTick, 2400); // 2.4 giây/mẫu
     }
 
     function stopMeasurement() {
@@ -590,9 +461,9 @@
         
         cancelAnimationFrame(animationId);
         if (autoLogInterval) clearInterval(autoLogInterval); 
+        if (measureTimer) clearTimeout(measureTimer);
         
         isMeasuring = false;
-        isPausedForReview = false;
         measureBtn.innerText = "Bắt đầu đo";
         measureBtn.className = "start-btn";
         micSelect.disabled = false;
@@ -603,10 +474,8 @@
         if (isMeasuring) stopMeasurement();
         
         noiseFloorOffset = 0;
-        logCount = 0;
         windowSumDb = 0;
         windowCountFrames = 0;
-        historyList.innerHTML = '';
         dbHistory = [];
 
         dbDisplay.innerText = '0.00'; 
@@ -635,8 +504,6 @@
     });
 
     function updateUI(db) {
-        if (isPausedForReview) return; // Nếu đang khóa màn hình 5 giây thì không cập nhật số
-
         let formattedDb = db.toFixed(2);
         dbDisplay.innerText = formattedDb;
         
@@ -651,6 +518,7 @@
         }
     }
 
+    // Thuật toán vẽ Đồ thị Cột Năng Lượng (Bar Chart)
     function drawGraphGrid() {
         canvasCtx.fillStyle = '#0f172a';
         canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
@@ -661,6 +529,7 @@
         let y130 = canvas.height - (130 / GRAPH_MAX_DB) * canvas.height;
         let y30 = canvas.height - (30 / GRAPH_MAX_DB) * canvas.height;
 
+        // Vạch giới hạn 130 dB và 30 dB
         canvasCtx.beginPath();
         canvasCtx.setLineDash([5, 5]);
         canvasCtx.moveTo(0, y130);
@@ -675,6 +544,7 @@
         canvasCtx.stroke();
         canvasCtx.setLineDash([]);
 
+        // Khung viền đồ thị
         canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
         canvasCtx.beginPath();
         canvasCtx.moveTo(0, canvas.height - 1);
@@ -691,6 +561,42 @@
         
         let textWidth = canvasCtx.measureText("Thời gian (s) ➔").width;
         canvasCtx.fillText("Thời gian (s) ➔", canvas.width - textWidth - 10, canvas.height - 5);
+
+        // VẼ CÁC CỘT CƯỜNG ĐỘ ÂM
+        if (dbHistory.length > 0) {
+            let maxDb = Math.max(...dbHistory);
+            let minDb = Math.min(...dbHistory);
+            
+            let totalSlots = 10; // Chuẩn bị sẵn không gian cho 10 cột (~24s)
+            let gap = 12;
+            let barWidth = Math.max(15, (canvas.width - 80 - (totalSlots * gap)) / totalSlots);
+
+            for (let i = 0; i < dbHistory.length; i++) {
+                let val = dbHistory[i];
+                let barHeight = (val / GRAPH_MAX_DB) * canvas.height;
+                let x = 60 + i * (barWidth + gap);
+                let y = canvas.height - barHeight;
+
+                // Quy tắc tô màu: Max = Đỏ, Min = Xám, Còn lại = Xanh lá
+                if (val === maxDb) {
+                    canvasCtx.fillStyle = '#ef4444'; // Đỏ (Lớn nhất)
+                } else if (val === minDb) {
+                    canvasCtx.fillStyle = '#64748b'; // Xám (Nhỏ nhất)
+                } else {
+                    canvasCtx.fillStyle = '#22c55e'; // Xanh lá (Tiêu chuẩn)
+                }
+
+                // Vẽ cột
+                canvasCtx.fillRect(x, y, barWidth, barHeight);
+
+                // Hiển thị số đo dB phía trên đỉnh mỗi cột
+                canvasCtx.fillStyle = '#f8fafc';
+                canvasCtx.font = '10px monospace';
+                let label = val.toFixed(1);
+                let labelWidth = canvasCtx.measureText(label).width;
+                canvasCtx.fillText(label, x + (barWidth - labelWidth) / 2, Math.max(12, y - 4));
+            }
+        }
     }
 
     function drawEmptyGraph() {
@@ -723,47 +629,13 @@
             if (db < 0) db = 0;
             if (db > GRAPH_MAX_DB) db = GRAPH_MAX_DB;
             
+            currentRmsDb = db;
             updateUI(db);
 
-            dbHistory.push(db);
-            if (dbHistory.length > canvas.width) {
-                dbHistory.shift(); 
-            }
-
-            if (!isPausedForReview) {
-                windowSumDb += db;
-                windowCountFrames++;
-            }
+            windowSumDb += db;
+            windowCountFrames++;
 
             drawGraphGrid();
-
-            if (dbHistory.length > 1) {
-                let grad = canvasCtx.createLinearGradient(0, 0, 0, canvas.height);
-                
-                let p130 = (GRAPH_MAX_DB - 130) / GRAPH_MAX_DB; 
-                let p30 = (GRAPH_MAX_DB - 30) / GRAPH_MAX_DB;   
-                
-                grad.addColorStop(0, '#ef4444');        
-                grad.addColorStop(Math.max(0, p130), '#ef4444'); 
-                grad.addColorStop(Math.min(1, p130 + 0.01), '#22c55e'); 
-                grad.addColorStop(Math.max(0, p30 - 0.01), '#22c55e'); 
-                grad.addColorStop(Math.min(1, p30), '#ef4444');        
-                grad.addColorStop(1, '#ef4444');        
-
-                canvasCtx.beginPath();
-                canvasCtx.lineWidth = 2.5;
-                canvasCtx.strokeStyle = grad;
-                canvasCtx.lineJoin = 'round';
-
-                for (let i = 0; i < dbHistory.length; i++) {
-                    let x = i; 
-                    let y = canvas.height - (dbHistory[i] / GRAPH_MAX_DB) * canvas.height;
-                    
-                    if (i === 0) canvasCtx.moveTo(x, y);
-                    else canvasCtx.lineTo(x, y);
-                }
-                canvasCtx.stroke();
-            }
         }
         draw();
     }
